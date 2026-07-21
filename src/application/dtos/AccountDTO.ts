@@ -3,7 +3,7 @@ export interface AccountDTO {
   userId: string;
   name: string;
   type: string;
-  balance: number;
+  balanceCents: number;
   currency: string;
   isActive: boolean;
   createdAt: string;

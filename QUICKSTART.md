@@ -26,7 +26,7 @@ npm run docker:up
 
 # Wait a few seconds for PostgreSQL to be ready
 # Then run migrations
-npm run db:migrate
+npm run prisma:migrate
 ```
 
 Expected output:
@@ -143,7 +143,7 @@ npm run docker:up        # Start containers
 npm run docker:down      # Stop containers
 
 # Database
-npm run db:migrate       # Run migrations
+npm run prisma:migrate       # Run migrations
 ```
 
 ## Next Steps
@@ -182,7 +182,7 @@ npm run docker:down
 npm run docker:up
 
 # Wait 10 seconds, then run migrations
-npm run db:migrate
+npm run prisma:migrate
 ```
 
 ### Port Already in Use
@@ -209,7 +209,7 @@ npm run build
 npm run docker:down
 rm -rf postgres-data
 npm run docker:up
-npm run db:migrate
+npm run prisma:migrate
 ```
 
 ## Development Workflow

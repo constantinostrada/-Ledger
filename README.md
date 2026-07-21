@@ -75,7 +75,7 @@ infrastructure → application → domain
 
 5. Run database migrations:
    ```bash
-   npm run db:migrate
+   npm run prisma:migrate
    ```
 
 6. Start the development server:

@@ -16,7 +16,7 @@ export class GetAccountsByUserUseCase {
       userId: account.userId,
       name: account.name,
       type: account.type.getValue(),
-      balance: account.balance.getAmount(),
+      balanceCents: account.balance.getCents(),
       currency: account.balance.getCurrency(),
       isActive: account.isActive,
       createdAt: account.createdAt.toISOString(),

@@ -12,19 +12,16 @@ export class CreateAccountUseCase {
     private readonly idGenerator: IIdGenerator
   ) {}
 
-  async execute(dto: CreateAccountDTO): Promise<AccountDTO> {
-    const initialBalance = dto.initialBalance ?? 0;
+  async execute(userId: string, dto: CreateAccountDTO): Promise<AccountDTO> {
+    const initialBalanceCents = dto.initialBalanceCents ?? 0;
     const currency = dto.currency ?? 'USD';
 
-    const account = new Account({
+    const account = Account.create({
       id: this.idGenerator.generate(),
-      userId: dto.userId,
+      userId,
       name: dto.name,
       type: AccountType.fromString(dto.type),
-      balance: new Money(initialBalance, currency),
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      balance: Money.fromCents(initialBalanceCents, currency),
     });
 
     await this.accountRepository.save(account);
@@ -38,7 +35,7 @@ export class CreateAccountUseCase {
       userId: account.userId,
       name: account.name,
       type: account.type.getValue(),
-      balance: account.balance.getAmount(),
+      balanceCents: account.balance.getCents(),
       currency: account.balance.getCurrency(),
       isActive: account.isActive,
       createdAt: account.createdAt.toISOString(),

@@ -1,7 +1,8 @@
 export interface TransactionDTO {
   id: string;
   accountId: string;
-  amount: number;
+  categoryId: string | null;
+  amountCents: number;
   currency: string;
   type: string;
   description: string;

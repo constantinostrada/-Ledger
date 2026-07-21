@@ -12,15 +12,40 @@ export interface AccountProps {
   updatedAt: Date;
 }
 
+export interface CreateAccountProps {
+  id: string;
+  userId: string;
+  name: string;
+  type: AccountType;
+  balance: Money;
+}
+
 export class Account {
   private readonly props: AccountProps;
 
-  constructor(props: AccountProps) {
-    this.validateAccount(props);
+  private constructor(props: AccountProps) {
+    Account.validate(props);
     this.props = props;
   }
 
-  private validateAccount(props: AccountProps): void {
+  static create(props: CreateAccountProps): Account {
+    const now = new Date();
+    return new Account({
+      ...props,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  /**
+   * Rehydrates an existing account from persistence.
+   */
+  static reconstitute(props: AccountProps): Account {
+    return new Account(props);
+  }
+
+  private static validate(props: AccountProps): void {
     if (!props.id || props.id.trim().length === 0) {
       throw new Error('Account ID is required');
     }

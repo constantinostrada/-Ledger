@@ -1,6 +1,8 @@
 export interface CreateTransactionDTO {
   accountId: string;
-  amount: number;
+  categoryId?: string;
+  /** Integer cents — floats are rejected by the domain. */
+  amountCents: number;
   currency: string;
   type: 'DEBIT' | 'CREDIT';
   description: string;

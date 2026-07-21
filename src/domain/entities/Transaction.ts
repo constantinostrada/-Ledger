@@ -4,6 +4,7 @@ import { TransactionType } from '../value-objects/TransactionType';
 export interface TransactionProps {
   id: string;
   accountId: string;
+  categoryId: string | null;
   amount: Money;
   type: TransactionType;
   description: string;
@@ -12,21 +13,52 @@ export interface TransactionProps {
   updatedAt: Date;
 }
 
+export interface CreateTransactionProps {
+  id: string;
+  accountId: string;
+  categoryId?: string | null;
+  amount: Money;
+  type: TransactionType;
+  description: string;
+  date: Date;
+}
+
 export class Transaction {
   private readonly props: TransactionProps;
 
-  constructor(props: TransactionProps) {
-    this.validateTransaction(props);
+  private constructor(props: TransactionProps) {
+    Transaction.validate(props);
     this.props = props;
   }
 
-  private validateTransaction(props: TransactionProps): void {
+  static create(props: CreateTransactionProps): Transaction {
+    const now = new Date();
+    return new Transaction({
+      ...props,
+      categoryId: props.categoryId ?? null,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  /**
+   * Rehydrates an existing transaction from persistence.
+   */
+  static reconstitute(props: TransactionProps): Transaction {
+    return new Transaction(props);
+  }
+
+  private static validate(props: TransactionProps): void {
     if (!props.id || props.id.trim().length === 0) {
       throw new Error('Transaction ID is required');
     }
 
     if (!props.accountId || props.accountId.trim().length === 0) {
       throw new Error('Account ID is required');
+    }
+
+    if (props.categoryId !== null && props.categoryId.trim().length === 0) {
+      throw new Error('Category ID must not be empty when provided');
     }
 
     if (!props.description || props.description.trim().length === 0) {
@@ -40,6 +72,10 @@ export class Transaction {
     if (props.date > new Date()) {
       throw new Error('Transaction date cannot be in the future');
     }
+
+    if (!props.amount.isPositive()) {
+      throw new Error('Transaction amount must be positive');
+    }
   }
 
   get id(): string {
@@ -48,6 +84,10 @@ export class Transaction {
 
   get accountId(): string {
     return this.props.accountId;
+  }
+
+  get categoryId(): string | null {
+    return this.props.categoryId;
   }
 
   get amount(): Money {

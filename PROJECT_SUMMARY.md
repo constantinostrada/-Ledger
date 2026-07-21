@@ -195,7 +195,7 @@ npm install
 npm run docker:up
 
 # Run migrations
-npm run db:migrate
+npm run prisma:migrate
 
 # Start development server
 npm run dev
@@ -241,7 +241,7 @@ npm run type-check   # TypeScript type checking
 npm run format       # Format with Prettier
 npm run docker:up    # Start Docker containers
 npm run docker:down  # Stop Docker containers
-npm run db:migrate   # Run database migrations
+npm run prisma:migrate   # Run database migrations
 ```
 
 ## ✅ Clean Architecture Compliance

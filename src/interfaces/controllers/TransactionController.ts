@@ -7,11 +7,12 @@ export class TransactionController {
   private container = Container.getInstance();
 
   async createTransaction(
+    userId: string,
     data: CreateTransactionDTO
   ): Promise<TransactionDTO> {
     try {
       const useCase = this.container.getCreateTransactionUseCase();
-      return await useCase.execute(data);
+      return await useCase.execute(userId, data);
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to create transaction: ${error.message}`);
@@ -21,11 +22,12 @@ export class TransactionController {
   }
 
   async getTransactions(
+    userId: string,
     params: GetTransactionsDTO
   ): Promise<TransactionDTO[]> {
     try {
       const useCase = this.container.getGetTransactionsUseCase();
-      return await useCase.execute(params);
+      return await useCase.execute(userId, params);
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to fetch transactions: ${error.message}`);

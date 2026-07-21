@@ -30,11 +30,11 @@ export class TransactionService {
 
   calculateBalance(transactions: Transaction[]): Money {
     if (transactions.length === 0) {
-      return new Money(0);
+      return Money.zero();
     }
 
     const currency = transactions[0].amount.getCurrency();
-    let balance = new Money(0, currency);
+    let balance = Money.zero(currency);
 
     for (const transaction of transactions) {
       if (transaction.isCredit()) {

@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { DatabaseClient } from '@infrastructure/database/client';
+import { prisma } from '@infrastructure/database/prisma';
 
 export async function GET() {
   try {
-    const pool = DatabaseClient.getInstance();
-    await pool.query('SELECT 1');
+    await prisma.$queryRaw`SELECT 1`;
 
     return NextResponse.json({
       status: 'healthy',

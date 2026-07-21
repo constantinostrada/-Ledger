@@ -5,10 +5,13 @@ import { Container } from '../di/container';
 export class AccountController {
   private container = Container.getInstance();
 
-  async createAccount(data: CreateAccountDTO): Promise<AccountDTO> {
+  async createAccount(
+    userId: string,
+    data: CreateAccountDTO
+  ): Promise<AccountDTO> {
     try {
       const useCase = this.container.getCreateAccountUseCase();
-      return await useCase.execute(data);
+      return await useCase.execute(userId, data);
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to create account: ${error.message}`);

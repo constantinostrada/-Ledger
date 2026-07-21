@@ -1,14 +1,26 @@
 import { ITransactionRepository } from '@domain/repositories/ITransactionRepository';
+import { IAccountRepository } from '@domain/repositories/IAccountRepository';
 import { Transaction } from '@domain/entities/Transaction';
 import { GetTransactionsDTO } from '../dtos/GetTransactionsDTO';
 import { TransactionDTO } from '../dtos/TransactionDTO';
 
 export class GetTransactionsUseCase {
   constructor(
-    private readonly transactionRepository: ITransactionRepository
+    private readonly transactionRepository: ITransactionRepository,
+    private readonly accountRepository: IAccountRepository
   ) {}
 
-  async execute(dto: GetTransactionsDTO): Promise<TransactionDTO[]> {
+  async execute(
+    userId: string,
+    dto: GetTransactionsDTO
+  ): Promise<TransactionDTO[]> {
+    const account = await this.accountRepository.findById(dto.accountId);
+    // Same error for missing and foreign accounts, so responses don't
+    // reveal which account ids exist for other users.
+    if (!account || account.userId !== userId) {
+      throw new Error('Account not found');
+    }
+
     const limit = dto.limit ?? 50;
     const offset = dto.offset ?? 0;
 
@@ -26,7 +38,8 @@ export class GetTransactionsUseCase {
     return {
       id: transaction.id,
       accountId: transaction.accountId,
-      amount: transaction.amount.getAmount(),
+      categoryId: transaction.categoryId,
+      amountCents: transaction.amount.getCents(),
       currency: transaction.amount.getCurrency(),
       type: transaction.type.getValue(),
       description: transaction.description,

@@ -323,7 +323,7 @@ npm run format:check
 npm run docker:up
 
 # Run migrations
-npm run db:migrate
+npm run prisma:migrate
 
 # Start dev server
 npm run dev

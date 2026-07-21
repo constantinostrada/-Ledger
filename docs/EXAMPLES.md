@@ -7,7 +7,7 @@ This document provides practical examples of using the Ledger API.
 1. Start the application:
    ```bash
    npm run docker:up
-   npm run db:migrate
+   npm run prisma:migrate
    npm run dev
    ```
 
