@@ -1,7 +1,7 @@
 ---
 id: 3df2f590-37db-4403-a807-c757fa71fd79-11
 type: gotcha
-title: `AccountType` enum also has a `CREDIT` value (credit-card account type) that is unrelated to the transaction DEBIT/CREDIT rename and must stay untouched.
+title: `AccountType` enum also has a `CREDIT` value (credit-card account type) that is unrelated…
 tags: [gotcha]
 created: 2026-07-22
 resource: ledger/src/domain/value-objects (AccountType) vs TransactionType

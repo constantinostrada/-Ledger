@@ -1,7 +1,7 @@
 ---
 id: 3df2f590-37db-4403-a807-c757fa71fd79-7
 type: gotcha
-title: Transaction creation requires a `currency` field in the request body; omitting it fails Zod validation with 'Required' rather than any balance-calculation bug.
+title: Transaction creation requires a `currency` field in the request body
 tags: [gotcha]
 created: 2026-07-22
 ---

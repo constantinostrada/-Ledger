@@ -1,7 +1,7 @@
 ---
 id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-17
 type: gotcha
-title: prisma/seed.ts computes the password hash only inside the user-create branch, not unconditionally
+title: prisma/seed.ts computes the password hash only inside the user-create branch, not…
 tags: [gotcha]
 created: 2026-07-21
 resource: prisma/seed.ts

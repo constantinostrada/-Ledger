@@ -1,7 +1,7 @@
 ---
 id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-21
 type: convention
-title: RegisterUserUseCase looks up the email in IUserRepository first and returns a duplicate/409 error before hashing the password or saving
+title: RegisterUserUseCase looks up the email in IUserRepository first and returns a…
 tags: [convention]
 created: 2026-07-21
 resource: src/application/use-cases/RegisterUserUseCase.ts, POST /api/auth/register route

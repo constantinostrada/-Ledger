@@ -1,7 +1,7 @@
 ---
 id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-4
 type: gotcha
-title: This dev machine already runs a native Postgres on localhost:5432, and other local Docker projects occupy 5433/5434, so the ledger project's dockerized `ledger-postgres` container must be remapped to a free host port.
+title: This dev machine already runs a native Postgres on localhost:5432, and other local Docker…
 tags: [gotcha]
 created: 2026-07-21
 resource: a gitignored docker-compose.override.yml maps the container to host port 5439, with .env's DATABASE_URL pointing at 5439; committed docker-compose.yml and .env.example keep the default 5432.

@@ -1,7 +1,7 @@
 ---
 id: 3df2f590-37db-4403-a807-c757fa71fd79-6
 type: gotcha
-title: `npx prisma migrate dev` prompts interactively for confirmation when a migration drops a column with existing data, which hangs in a non-interactive agent session.
+title: `npx prisma migrate dev` prompts interactively for confirmation when a migration drops a…
 tags: [gotcha]
 created: 2026-07-22
 ---

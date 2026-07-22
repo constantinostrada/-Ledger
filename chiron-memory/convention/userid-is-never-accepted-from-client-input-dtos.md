@@ -1,7 +1,7 @@
 ---
 id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-12
 type: convention
-title: userId is never accepted from client input (DTOs/body/query) for scoped resources — it's always the authenticated identity passed as an explicit first argument to use cases
+title: userId is never accepted from client input (DTOs/body/query) for scoped resources
 tags: [convention]
 created: 2026-07-21
 resource: CreateAccountDTO (userId field removed), CreateAccountUseCase, CreateTransactionUseCase, GetTransactionsUseCase, authenticateRequest() in src/interfaces/auth/authenticateRequest.ts
