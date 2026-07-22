@@ -5,6 +5,8 @@ export interface TransactionProps {
   id: string;
   accountId: string;
   categoryId: string | null;
+  /** Set when this transaction was materialized from a recurring rule. */
+  recurringRuleId: string | null;
   amount: Money;
   type: TransactionType;
   note: string;
@@ -17,6 +19,7 @@ export interface CreateTransactionProps {
   id: string;
   accountId: string;
   categoryId?: string | null;
+  recurringRuleId?: string | null;
   amount: Money;
   type: TransactionType;
   note: string;
@@ -36,6 +39,7 @@ export class Transaction {
     return new Transaction({
       ...props,
       categoryId: props.categoryId ?? null,
+      recurringRuleId: props.recurringRuleId ?? null,
       createdAt: now,
       updatedAt: now,
     });
@@ -59,6 +63,13 @@ export class Transaction {
 
     if (props.categoryId !== null && props.categoryId.trim().length === 0) {
       throw new Error('Category ID must not be empty when provided');
+    }
+
+    if (
+      props.recurringRuleId !== null &&
+      props.recurringRuleId.trim().length === 0
+    ) {
+      throw new Error('Recurring rule ID must not be empty when provided');
     }
 
     if (!props.note || props.note.trim().length === 0) {
@@ -88,6 +99,10 @@ export class Transaction {
 
   get categoryId(): string | null {
     return this.props.categoryId;
+  }
+
+  get recurringRuleId(): string | null {
+    return this.props.recurringRuleId;
   }
 
   get amount(): Money {

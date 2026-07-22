@@ -1,13 +1,13 @@
-export interface TransactionDTO {
+export interface RecurringRuleDTO {
   id: string;
   accountId: string;
   categoryId: string | null;
-  recurringRuleId: string | null;
   amountCents: number;
   currency: string;
   type: string;
   note: string;
-  date: string;
+  interval: string;
+  startDate: string;
   createdAt: string;
   updatedAt: string;
 }

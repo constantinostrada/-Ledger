@@ -58,20 +58,22 @@ export class PrismaTransactionRepository implements ITransactionRepository {
   }
 
   async save(transaction: Transaction): Promise<void> {
-    await this.prisma.transaction.create({
-      data: {
-        id: transaction.id,
-        accountId: transaction.accountId,
-        categoryId: transaction.categoryId,
-        amountCents: transaction.amount.getCents(),
-        currency: transaction.amount.getCurrency(),
-        type: transaction.type.getValue() as PrismaTransactionType,
-        note: transaction.note,
-        date: transaction.date,
-        createdAt: transaction.createdAt,
-        updatedAt: transaction.updatedAt,
-      },
+    await this.prisma.transaction.create({ data: this.toRow(transaction) });
+  }
+
+  async saveAllIgnoringDuplicates(
+    transactions: Transaction[]
+  ): Promise<number> {
+    if (transactions.length === 0) {
+      return 0;
+    }
+    // skipDuplicates → ON CONFLICT DO NOTHING against the unique
+    // (recurring_rule_id, date) index, so re-sweeps can never double-post.
+    const result = await this.prisma.transaction.createMany({
+      data: transactions.map((transaction) => this.toRow(transaction)),
+      skipDuplicates: true,
     });
+    return result.count;
   }
 
   async delete(id: string): Promise<void> {
@@ -82,11 +84,66 @@ export class PrismaTransactionRepository implements ITransactionRepository {
     return this.prisma.transaction.count({ where: { accountId } });
   }
 
+  /**
+   * Spent-per-category is never stored: it is derived here in SQL (mirrors
+   * PrismaAccountRepository.deriveBalances) so budgeting N categories costs
+   * one query instead of loading every transaction.
+   */
+  async sumExpensesByCategory(
+    userId: string,
+    categoryIds: string[],
+    dateFrom: Date,
+    dateToExclusive: Date
+  ): Promise<Map<string, number>> {
+    const spent = new Map<string, number>();
+    if (categoryIds.length === 0) {
+      return spent;
+    }
+
+    const sums = await this.prisma.transaction.groupBy({
+      by: ['categoryId'],
+      where: {
+        // Ownership is enforced through the account relation, so a foreign
+        // categoryId can never aggregate another user's transactions.
+        account: { userId },
+        categoryId: { in: categoryIds },
+        type: 'EXPENSE',
+        date: { gte: dateFrom, lt: dateToExclusive },
+      },
+      _sum: { amountCents: true },
+    });
+
+    for (const sum of sums) {
+      if (sum.categoryId !== null) {
+        spent.set(sum.categoryId, sum._sum.amountCents ?? 0);
+      }
+    }
+
+    return spent;
+  }
+
+  private toRow(transaction: Transaction) {
+    return {
+      id: transaction.id,
+      accountId: transaction.accountId,
+      categoryId: transaction.categoryId,
+      recurringRuleId: transaction.recurringRuleId,
+      amountCents: transaction.amount.getCents(),
+      currency: transaction.amount.getCurrency(),
+      type: transaction.type.getValue() as PrismaTransactionType,
+      note: transaction.note,
+      date: transaction.date,
+      createdAt: transaction.createdAt,
+      updatedAt: transaction.updatedAt,
+    };
+  }
+
   private toDomain(row: TransactionRow): Transaction {
     return Transaction.reconstitute({
       id: row.id,
       accountId: row.accountId,
       categoryId: row.categoryId,
+      recurringRuleId: row.recurringRuleId,
       amount: Money.fromCents(row.amountCents, row.currency),
       type: TransactionType.fromString(row.type),
       note: row.note,

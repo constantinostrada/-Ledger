@@ -2,6 +2,8 @@ import { prisma } from '@infrastructure/database/prisma';
 import { PrismaAccountRepository } from '@infrastructure/repositories/PrismaAccountRepository';
 import { PrismaTransactionRepository } from '@infrastructure/repositories/PrismaTransactionRepository';
 import { PrismaCategoryRepository } from '@infrastructure/repositories/PrismaCategoryRepository';
+import { PrismaBudgetRepository } from '@infrastructure/repositories/PrismaBudgetRepository';
+import { PrismaRecurringRuleRepository } from '@infrastructure/repositories/PrismaRecurringRuleRepository';
 import { PrismaUserRepository } from '@infrastructure/repositories/PrismaUserRepository';
 import { UuidGenerator } from '@infrastructure/id-generation/UuidGenerator';
 import { BcryptPasswordHasher } from '@infrastructure/security/BcryptPasswordHasher';
@@ -14,6 +16,11 @@ import { UpdateAccountUseCase } from '@application/use-cases/UpdateAccountUseCas
 import { ArchiveAccountUseCase } from '@application/use-cases/ArchiveAccountUseCase';
 import { CreateTransactionUseCase } from '@application/use-cases/CreateTransactionUseCase';
 import { GetTransactionsUseCase } from '@application/use-cases/GetTransactionsUseCase';
+import { SetBudgetUseCase } from '@application/use-cases/SetBudgetUseCase';
+import { GetBudgetsUseCase } from '@application/use-cases/GetBudgetsUseCase';
+import { CreateRecurringRuleUseCase } from '@application/use-cases/CreateRecurringRuleUseCase';
+import { ListRecurringRulesUseCase } from '@application/use-cases/ListRecurringRulesUseCase';
+import { MaterializeRecurringTransactionsUseCase } from '@application/use-cases/MaterializeRecurringTransactionsUseCase';
 import { RegisterUserUseCase } from '@application/use-cases/RegisterUserUseCase';
 import { LoginUserUseCase } from '@application/use-cases/LoginUserUseCase';
 
@@ -36,6 +43,8 @@ export class Container {
   private accountRepository = new PrismaAccountRepository(prisma);
   private transactionRepository = new PrismaTransactionRepository(prisma);
   private categoryRepository = new PrismaCategoryRepository(prisma);
+  private budgetRepository = new PrismaBudgetRepository(prisma);
+  private recurringRuleRepository = new PrismaRecurringRuleRepository(prisma);
   private userRepository = new PrismaUserRepository(prisma);
   private idGenerator = new UuidGenerator();
   private passwordHasher = new BcryptPasswordHasher();
@@ -75,6 +84,36 @@ export class Container {
     this.transactionRepository,
     this.accountRepository
   );
+
+  private setBudgetUseCase = new SetBudgetUseCase(
+    this.budgetRepository,
+    this.categoryRepository,
+    this.transactionRepository,
+    this.idGenerator
+  );
+
+  private getBudgetsUseCase = new GetBudgetsUseCase(
+    this.budgetRepository,
+    this.transactionRepository
+  );
+
+  private createRecurringRuleUseCase = new CreateRecurringRuleUseCase(
+    this.recurringRuleRepository,
+    this.accountRepository,
+    this.categoryRepository,
+    this.idGenerator
+  );
+
+  private listRecurringRulesUseCase = new ListRecurringRulesUseCase(
+    this.recurringRuleRepository
+  );
+
+  private materializeRecurringTransactionsUseCase =
+    new MaterializeRecurringTransactionsUseCase(
+      this.recurringRuleRepository,
+      this.transactionRepository,
+      this.idGenerator
+    );
 
   private registerUserUseCase = new RegisterUserUseCase(
     this.userRepository,
@@ -120,6 +159,26 @@ export class Container {
 
   getGetTransactionsUseCase(): GetTransactionsUseCase {
     return this.getTransactionsUseCase;
+  }
+
+  getSetBudgetUseCase(): SetBudgetUseCase {
+    return this.setBudgetUseCase;
+  }
+
+  getGetBudgetsUseCase(): GetBudgetsUseCase {
+    return this.getBudgetsUseCase;
+  }
+
+  getCreateRecurringRuleUseCase(): CreateRecurringRuleUseCase {
+    return this.createRecurringRuleUseCase;
+  }
+
+  getListRecurringRulesUseCase(): ListRecurringRulesUseCase {
+    return this.listRecurringRulesUseCase;
+  }
+
+  getMaterializeRecurringTransactionsUseCase(): MaterializeRecurringTransactionsUseCase {
+    return this.materializeRecurringTransactionsUseCase;
   }
 
   getRegisterUserUseCase(): RegisterUserUseCase {
