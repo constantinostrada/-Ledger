@@ -1,4 +1,5 @@
 ---
+id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-24
 type: convention
 title: Before declaring an auth/authorization feature complete, verification is done by starting the real dev server and running a curl-based e2e script that checks token issuance, spoofed-userId rejection, missing/garbage-token 401s, and cross-user data isolation, then deleting the seeded test users (email LIKE '%@test.dev') afterward
 tags: [convention]

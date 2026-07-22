@@ -1,4 +1,5 @@
 ---
+id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-15
 type: architecture
 title: JwtTokenService requires the JWT secret to be passed at construction time (fails fast if missing) rather than reading it lazily per-call
 tags: [architecture]

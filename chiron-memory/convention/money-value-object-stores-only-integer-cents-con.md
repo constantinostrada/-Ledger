@@ -1,4 +1,5 @@
 ---
+id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-1
 type: convention
 title: Money value object stores only integer cents; constructor is private and callers must use `Money.fromCents(cents)` (plus `Money.zero()`), which throws via `Number.isSafeInteger` on floats, NaN, and Infinity.
 tags: [convention]

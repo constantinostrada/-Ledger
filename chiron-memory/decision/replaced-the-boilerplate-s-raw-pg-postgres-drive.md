@@ -1,4 +1,5 @@
 ---
+id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-0
 type: decision
 title: Replaced the boilerplate's raw `pg` Postgres driver stack (connection pool, hand-written SQL migration files, Postgres*Repository classes, scripts/migrate.ts) with Prisma (schema.prisma + prisma migrate + PrismaClient singleton + Prisma*Repository classes).
 tags: [decision]

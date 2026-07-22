@@ -1,4 +1,5 @@
 ---
+id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-22
 type: convention
 title: Auth routes use 201 on successful register, 409 on duplicate email, 200 on successful login, 401 on any login failure (unknown email or wrong password alike)
 tags: [convention]

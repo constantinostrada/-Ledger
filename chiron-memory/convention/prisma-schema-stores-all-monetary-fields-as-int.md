@@ -1,4 +1,5 @@
 ---
+id: 4542cef1-7a8d-4ad0-a75b-ef4d2b9b5d5c-3
 type: convention
 title: Prisma schema stores all monetary fields as `Int` cents columns (e.g. balance_cents, amount_cents), never Decimal/Float; DTOs mirror this with explicit `*Cents` field names (balanceCents, amountCents) instead of generic amount/balance, and zod validation schemas enforce `.int()` on them.
 tags: [convention]
