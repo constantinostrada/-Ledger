@@ -8,6 +8,7 @@ import { TransactionService } from '@domain/services/TransactionService';
 import { CreateTransactionDTO } from '../dtos/CreateTransactionDTO';
 import { TransactionDTO } from '../dtos/TransactionDTO';
 import { IIdGenerator } from '../ports/IIdGenerator';
+import { toTransactionDTO } from '../mappers/transactionMapper';
 
 export class CreateTransactionUseCase {
   constructor(
@@ -42,7 +43,7 @@ export class CreateTransactionUseCase {
       categoryId: dto.categoryId ?? null,
       amount: Money.fromCents(dto.amountCents, dto.currency),
       type: TransactionType.fromString(dto.type),
-      description: dto.description,
+      note: dto.note,
       date: new Date(dto.date),
     });
 
@@ -51,21 +52,6 @@ export class CreateTransactionUseCase {
 
     await this.transactionRepository.save(transaction);
 
-    return this.toDTO(transaction);
-  }
-
-  private toDTO(transaction: Transaction): TransactionDTO {
-    return {
-      id: transaction.id,
-      accountId: transaction.accountId,
-      categoryId: transaction.categoryId,
-      amountCents: transaction.amount.getCents(),
-      currency: transaction.amount.getCurrency(),
-      type: transaction.type.getValue(),
-      description: transaction.description,
-      date: transaction.date.toISOString(),
-      createdAt: transaction.createdAt.toISOString(),
-      updatedAt: transaction.updatedAt.toISOString(),
-    };
+    return toTransactionDTO(transaction);
   }
 }

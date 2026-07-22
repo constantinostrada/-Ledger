@@ -15,8 +15,8 @@ enum AccountType {
 }
 
 enum TransactionType {
-  DEBIT
-  CREDIT
+  INCOME
+  EXPENSE
 }
 
 model User {
@@ -37,8 +37,8 @@ model Account {
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   name         String        @db.VarChar(100)
   type         AccountType
-  // Money is ALWAYS integer cents — never floats/decimals.
-  balanceCents Int           @default(0) @map("balance_cents")
+  // Balance is intentionally NOT stored: it is always derived from the
+  // account's transactions so it can never drift.
   currency     String        @default("USD") @db.Char(3)
   isActive     Boolean       @default(true) @map("is_active")
   createdAt    DateTime      @default(now()) @map("created_at")
@@ -59,7 +59,7 @@ model Transaction {
   amountCents Int             @map("amount_cents")
   currency    String          @default("USD") @db.Char(3)
   type        TransactionType
-  description String          @db.VarChar(500)
+  note        String          @db.VarChar(500)
   date        DateTime
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime        @default(now()) @map("updated_at")

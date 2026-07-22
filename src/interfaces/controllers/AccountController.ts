@@ -1,4 +1,5 @@
 import { CreateAccountDTO } from '@application/dtos/CreateAccountDTO';
+import { UpdateAccountDTO } from '@application/dtos/UpdateAccountDTO';
 import { AccountDTO } from '@application/dtos/AccountDTO';
 import { Container } from '../di/container';
 
@@ -9,26 +10,29 @@ export class AccountController {
     userId: string,
     data: CreateAccountDTO
   ): Promise<AccountDTO> {
-    try {
-      const useCase = this.container.getCreateAccountUseCase();
-      return await useCase.execute(userId, data);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to create account: ${error.message}`);
-      }
-      throw error;
-    }
+    const useCase = this.container.getCreateAccountUseCase();
+    return await useCase.execute(userId, data);
   }
 
-  async getAccountsByUser(userId: string): Promise<AccountDTO[]> {
-    try {
-      const useCase = this.container.getGetAccountsByUserUseCase();
-      return await useCase.execute(userId);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to fetch accounts: ${error.message}`);
-      }
-      throw error;
-    }
+  async getAccountsByUser(
+    userId: string,
+    includeArchived = false
+  ): Promise<AccountDTO[]> {
+    const useCase = this.container.getGetAccountsByUserUseCase();
+    return await useCase.execute(userId, includeArchived);
+  }
+
+  async updateAccount(
+    userId: string,
+    accountId: string,
+    data: UpdateAccountDTO
+  ): Promise<AccountDTO> {
+    const useCase = this.container.getUpdateAccountUseCase();
+    return await useCase.execute(userId, accountId, data);
+  }
+
+  async archiveAccount(userId: string, accountId: string): Promise<AccountDTO> {
+    const useCase = this.container.getArchiveAccountUseCase();
+    return await useCase.execute(userId, accountId);
   }
 }

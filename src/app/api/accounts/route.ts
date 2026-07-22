@@ -38,7 +38,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const accounts = await controller.getAccountsByUser(userId);
+    // Archived accounts are hidden unless explicitly requested.
+    const includeArchived =
+      request.nextUrl.searchParams.get('includeArchived') === 'true';
+
+    const accounts = await controller.getAccountsByUser(
+      userId,
+      includeArchived
+    );
 
     return NextResponse.json(accounts, { status: 200 });
   } catch (error) {

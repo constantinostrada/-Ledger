@@ -1,6 +1,6 @@
 export enum TransactionTypeEnum {
-  DEBIT = 'DEBIT',
-  CREDIT = 'CREDIT',
+  INCOME = 'INCOME',
+  EXPENSE = 'EXPENSE',
 }
 
 export class TransactionType {
@@ -10,31 +10,31 @@ export class TransactionType {
     this.value = value;
   }
 
-  static debit(): TransactionType {
-    return new TransactionType(TransactionTypeEnum.DEBIT);
+  static income(): TransactionType {
+    return new TransactionType(TransactionTypeEnum.INCOME);
   }
 
-  static credit(): TransactionType {
-    return new TransactionType(TransactionTypeEnum.CREDIT);
+  static expense(): TransactionType {
+    return new TransactionType(TransactionTypeEnum.EXPENSE);
   }
 
   static fromString(value: string): TransactionType {
     const upperValue = value.toUpperCase();
-    if (upperValue === TransactionTypeEnum.DEBIT) {
-      return TransactionType.debit();
+    if (upperValue === TransactionTypeEnum.INCOME) {
+      return TransactionType.income();
     }
-    if (upperValue === TransactionTypeEnum.CREDIT) {
-      return TransactionType.credit();
+    if (upperValue === TransactionTypeEnum.EXPENSE) {
+      return TransactionType.expense();
     }
     throw new Error(`Invalid transaction type: ${value}`);
   }
 
-  isDebit(): boolean {
-    return this.value === TransactionTypeEnum.DEBIT;
+  isIncome(): boolean {
+    return this.value === TransactionTypeEnum.INCOME;
   }
 
-  isCredit(): boolean {
-    return this.value === TransactionTypeEnum.CREDIT;
+  isExpense(): boolean {
+    return this.value === TransactionTypeEnum.EXPENSE;
   }
 
   getValue(): string {

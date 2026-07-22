@@ -21,13 +21,14 @@ const categories = [
   { id: 'cat-entertainment', name: 'Entertainment' },
 ];
 
+// Balances are never stored — each account's balance derives from its
+// transactions below (opening-balance credits included).
 const accounts = [
   {
     id: 'acc-demo-checking',
     userId: 'user-demo',
     name: 'Everyday Checking',
     type: 'CHECKING' as const,
-    balanceCents: 250_000, // $2,500.00
     currency: 'USD',
   },
   {
@@ -35,20 +36,39 @@ const accounts = [
     userId: 'user-demo',
     name: 'Rainy Day Savings',
     type: 'SAVINGS' as const,
-    balanceCents: 1_000_000, // $10,000.00
     currency: 'USD',
   },
 ];
 
 const transactions = [
   {
+    id: 'txn-seed-opening-checking',
+    accountId: 'acc-demo-checking',
+    categoryId: null,
+    amountCents: 250_000, // $2,500.00
+    currency: 'USD',
+    type: 'INCOME' as const,
+    note: 'Opening balance',
+    date: new Date('2026-06-30T00:00:00.000Z'),
+  },
+  {
+    id: 'txn-seed-opening-savings',
+    accountId: 'acc-demo-savings',
+    categoryId: null,
+    amountCents: 1_000_000, // $10,000.00
+    currency: 'USD',
+    type: 'INCOME' as const,
+    note: 'Opening balance',
+    date: new Date('2026-06-30T00:00:00.000Z'),
+  },
+  {
     id: 'txn-seed-0001',
     accountId: 'acc-demo-checking',
     categoryId: 'cat-salary',
     amountCents: 350_000,
     currency: 'USD',
-    type: 'CREDIT' as const,
-    description: 'Monthly salary',
+    type: 'INCOME' as const,
+    note: 'Monthly salary',
     date: new Date('2026-07-01T09:00:00.000Z'),
   },
   {
@@ -57,8 +77,8 @@ const transactions = [
     categoryId: 'cat-rent',
     amountCents: 120_000,
     currency: 'USD',
-    type: 'DEBIT' as const,
-    description: 'July rent',
+    type: 'EXPENSE' as const,
+    note: 'July rent',
     date: new Date('2026-07-02T12:00:00.000Z'),
   },
   {
@@ -67,8 +87,8 @@ const transactions = [
     categoryId: 'cat-groceries',
     amountCents: 8_754,
     currency: 'USD',
-    type: 'DEBIT' as const,
-    description: 'Weekly groceries',
+    type: 'EXPENSE' as const,
+    note: 'Weekly groceries',
     date: new Date('2026-07-05T17:30:00.000Z'),
   },
   {
@@ -77,8 +97,8 @@ const transactions = [
     categoryId: null,
     amountCents: 50_000,
     currency: 'USD',
-    type: 'CREDIT' as const,
-    description: 'Monthly savings transfer',
+    type: 'INCOME' as const,
+    note: 'Monthly savings transfer',
     date: new Date('2026-07-03T08:00:00.000Z'),
   },
 ];

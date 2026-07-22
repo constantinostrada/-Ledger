@@ -10,6 +10,8 @@ import { ITokenService } from '@application/ports/ITokenService';
 import { TransactionService } from '@domain/services/TransactionService';
 import { CreateAccountUseCase } from '@application/use-cases/CreateAccountUseCase';
 import { GetAccountsByUserUseCase } from '@application/use-cases/GetAccountsByUserUseCase';
+import { UpdateAccountUseCase } from '@application/use-cases/UpdateAccountUseCase';
+import { ArchiveAccountUseCase } from '@application/use-cases/ArchiveAccountUseCase';
 import { CreateTransactionUseCase } from '@application/use-cases/CreateTransactionUseCase';
 import { GetTransactionsUseCase } from '@application/use-cases/GetTransactionsUseCase';
 import { RegisterUserUseCase } from '@application/use-cases/RegisterUserUseCase';
@@ -45,10 +47,19 @@ export class Container {
   // Use Cases
   private createAccountUseCase = new CreateAccountUseCase(
     this.accountRepository,
+    this.transactionRepository,
     this.idGenerator
   );
 
   private getAccountsByUserUseCase = new GetAccountsByUserUseCase(
+    this.accountRepository
+  );
+
+  private updateAccountUseCase = new UpdateAccountUseCase(
+    this.accountRepository
+  );
+
+  private archiveAccountUseCase = new ArchiveAccountUseCase(
     this.accountRepository
   );
 
@@ -93,6 +104,14 @@ export class Container {
 
   getGetAccountsByUserUseCase(): GetAccountsByUserUseCase {
     return this.getAccountsByUserUseCase;
+  }
+
+  getUpdateAccountUseCase(): UpdateAccountUseCase {
+    return this.updateAccountUseCase;
+  }
+
+  getArchiveAccountUseCase(): ArchiveAccountUseCase {
+    return this.archiveAccountUseCase;
   }
 
   getCreateTransactionUseCase(): CreateTransactionUseCase {

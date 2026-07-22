@@ -8,6 +8,18 @@ import {
 
 const controller = new TransactionController();
 
+function toErrorResponse(error: unknown): NextResponse {
+  if (error instanceof Error) {
+    const status =
+      error.message === 'Account not found' ||
+      error.message === 'Category not found'
+        ? 404
+        : 400;
+    return NextResponse.json({ error: error.message }, { status });
+  }
+  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+}
+
 export async function POST(request: NextRequest) {
   const userId = authenticateRequest(request);
   if (!userId) {
@@ -27,13 +39,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(transaction, { status: 201 });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return toErrorResponse(error);
   }
 }
 
@@ -45,12 +51,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
-    const accountId = searchParams.get('accountId');
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
 
     const validatedData = getTransactionsSchema.parse({
-      accountId,
+      accountId: searchParams.get('accountId') ?? undefined,
+      categoryId: searchParams.get('categoryId') ?? undefined,
+      dateFrom: searchParams.get('dateFrom') ?? undefined,
+      dateTo: searchParams.get('dateTo') ?? undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
     });
@@ -62,12 +70,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(transactions, { status: 200 });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return toErrorResponse(error);
   }
 }

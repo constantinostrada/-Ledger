@@ -6,6 +6,10 @@ export interface AccountProps {
   userId: string;
   name: string;
   type: AccountType;
+  /**
+   * Derived snapshot: the sum of the account's transactions at load time.
+   * It is NEVER persisted — repositories must compute it from transactions.
+   */
   balance: Money;
   isActive: boolean;
   createdAt: Date;
@@ -93,6 +97,30 @@ export class Account {
 
   get updatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  rename(name: string): void {
+    Account.validate({ ...this.props, name });
+    this.props.name = name;
+    this.touch();
+  }
+
+  changeType(type: AccountType): void {
+    this.props.type = type;
+    this.touch();
+  }
+
+  /**
+   * Archiving is a soft delete: the account keeps its history but is
+   * hidden from default listings and rejects new transactions.
+   */
+  archive(): void {
+    this.props.isActive = false;
+    this.touch();
+  }
+
+  private touch(): void {
+    this.props.updatedAt = new Date();
   }
 
   canDebit(amount: Money): boolean {

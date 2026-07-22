@@ -5,7 +5,7 @@ export interface TransactionDTO {
   amountCents: number;
   currency: string;
   type: string;
-  description: string;
+  note: string;
   date: string;
   createdAt: string;
   updatedAt: string;

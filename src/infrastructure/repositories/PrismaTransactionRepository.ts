@@ -1,10 +1,14 @@
 import {
   PrismaClient,
+  Prisma,
   Transaction as TransactionRow,
   TransactionType as PrismaTransactionType,
 } from '@prisma/client';
 import { Transaction } from '@domain/entities/Transaction';
-import { ITransactionRepository } from '@domain/repositories/ITransactionRepository';
+import {
+  ITransactionRepository,
+  TransactionFilter,
+} from '@domain/repositories/ITransactionRepository';
 import { Money } from '@domain/value-objects/Money';
 import { TransactionType } from '@domain/value-objects/TransactionType';
 
@@ -24,13 +28,28 @@ export class PrismaTransactionRepository implements ITransactionRepository {
     return rows.map((row) => this.toDomain(row));
   }
 
-  async findByAccountIdWithPagination(
-    accountId: string,
+  async findByFilter(
+    filter: TransactionFilter,
     limit: number,
     offset: number
   ): Promise<Transaction[]> {
+    const date: Prisma.DateTimeFilter = {};
+    if (filter.dateFrom) {
+      date.gte = filter.dateFrom;
+    }
+    if (filter.dateTo) {
+      date.lte = filter.dateTo;
+    }
+
     const rows = await this.prisma.transaction.findMany({
-      where: { accountId },
+      where: {
+        // Ownership is enforced through the account relation, so a foreign
+        // accountId/categoryId can never leak another user's transactions.
+        account: { userId: filter.userId },
+        ...(filter.accountId ? { accountId: filter.accountId } : {}),
+        ...(filter.categoryId ? { categoryId: filter.categoryId } : {}),
+        ...(filter.dateFrom || filter.dateTo ? { date } : {}),
+      },
       orderBy: { date: 'desc' },
       take: limit,
       skip: offset,
@@ -47,7 +66,7 @@ export class PrismaTransactionRepository implements ITransactionRepository {
         amountCents: transaction.amount.getCents(),
         currency: transaction.amount.getCurrency(),
         type: transaction.type.getValue() as PrismaTransactionType,
-        description: transaction.description,
+        note: transaction.note,
         date: transaction.date,
         createdAt: transaction.createdAt,
         updatedAt: transaction.updatedAt,
@@ -70,7 +89,7 @@ export class PrismaTransactionRepository implements ITransactionRepository {
       categoryId: row.categoryId,
       amount: Money.fromCents(row.amountCents, row.currency),
       type: TransactionType.fromString(row.type),
-      description: row.description,
+      note: row.note,
       date: row.date,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

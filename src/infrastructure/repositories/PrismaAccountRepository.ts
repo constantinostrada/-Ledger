@@ -4,7 +4,10 @@ import {
   AccountType as PrismaAccountType,
 } from '@prisma/client';
 import { Account } from '@domain/entities/Account';
-import { IAccountRepository } from '@domain/repositories/IAccountRepository';
+import {
+  IAccountRepository,
+  FindByUserIdOptions,
+} from '@domain/repositories/IAccountRepository';
 import { Money } from '@domain/value-objects/Money';
 import { AccountType } from '@domain/value-objects/AccountType';
 
@@ -13,15 +16,26 @@ export class PrismaAccountRepository implements IAccountRepository {
 
   async findById(id: string): Promise<Account | null> {
     const row = await this.prisma.account.findUnique({ where: { id } });
-    return row ? this.toDomain(row) : null;
+    if (!row) {
+      return null;
+    }
+    const balances = await this.deriveBalances([row.id]);
+    return this.toDomain(row, balances.get(row.id) ?? 0);
   }
 
-  async findByUserId(userId: string): Promise<Account[]> {
+  async findByUserId(
+    userId: string,
+    options?: FindByUserIdOptions
+  ): Promise<Account[]> {
     const rows = await this.prisma.account.findMany({
-      where: { userId },
+      where: {
+        userId,
+        ...(options?.includeArchived ? {} : { isActive: true }),
+      },
       orderBy: { createdAt: 'desc' },
     });
-    return rows.map((row) => this.toDomain(row));
+    const balances = await this.deriveBalances(rows.map((row) => row.id));
+    return rows.map((row) => this.toDomain(row, balances.get(row.id) ?? 0));
   }
 
   async save(account: Account): Promise<void> {
@@ -32,12 +46,40 @@ export class PrismaAccountRepository implements IAccountRepository {
     const { id, ...data } = this.toRow(account);
     await this.prisma.account.update({
       where: { id },
-      data: { ...data, updatedAt: new Date() },
+      data,
     });
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.account.delete({ where: { id } });
+  }
+
+  /**
+   * Balance is never stored: it is derived here as income minus expenses
+   * (mirrors TransactionService.calculateBalance), aggregated in SQL so
+   * listing N accounts costs one query instead of loading every transaction.
+   */
+  private async deriveBalances(
+    accountIds: string[]
+  ): Promise<Map<string, number>> {
+    const balances = new Map<string, number>();
+    if (accountIds.length === 0) {
+      return balances;
+    }
+
+    const sums = await this.prisma.transaction.groupBy({
+      by: ['accountId', 'type'],
+      where: { accountId: { in: accountIds } },
+      _sum: { amountCents: true },
+    });
+
+    for (const sum of sums) {
+      const amount = sum._sum.amountCents ?? 0;
+      const signed = sum.type === 'INCOME' ? amount : -amount;
+      balances.set(sum.accountId, (balances.get(sum.accountId) ?? 0) + signed);
+    }
+
+    return balances;
   }
 
   private toRow(account: Account) {
@@ -46,7 +88,6 @@ export class PrismaAccountRepository implements IAccountRepository {
       userId: account.userId,
       name: account.name,
       type: account.type.getValue() as PrismaAccountType,
-      balanceCents: account.balance.getCents(),
       currency: account.balance.getCurrency(),
       isActive: account.isActive,
       createdAt: account.createdAt,
@@ -54,13 +95,13 @@ export class PrismaAccountRepository implements IAccountRepository {
     };
   }
 
-  private toDomain(row: AccountRow): Account {
+  private toDomain(row: AccountRow, balanceCents: number): Account {
     return Account.reconstitute({
       id: row.id,
       userId: row.userId,
       name: row.name,
       type: AccountType.fromString(row.type),
-      balance: Money.fromCents(row.balanceCents, row.currency),
+      balance: Money.fromCents(balanceCents, row.currency),
       isActive: row.isActive,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

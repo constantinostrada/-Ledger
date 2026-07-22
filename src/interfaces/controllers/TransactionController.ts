@@ -10,29 +10,15 @@ export class TransactionController {
     userId: string,
     data: CreateTransactionDTO
   ): Promise<TransactionDTO> {
-    try {
-      const useCase = this.container.getCreateTransactionUseCase();
-      return await useCase.execute(userId, data);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to create transaction: ${error.message}`);
-      }
-      throw error;
-    }
+    const useCase = this.container.getCreateTransactionUseCase();
+    return await useCase.execute(userId, data);
   }
 
   async getTransactions(
     userId: string,
     params: GetTransactionsDTO
   ): Promise<TransactionDTO[]> {
-    try {
-      const useCase = this.container.getGetTransactionsUseCase();
-      return await useCase.execute(userId, params);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to fetch transactions: ${error.message}`);
-      }
-      throw error;
-    }
+    const useCase = this.container.getGetTransactionsUseCase();
+    return await useCase.execute(userId, params);
   }
 }

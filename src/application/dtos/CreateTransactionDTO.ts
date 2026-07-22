@@ -4,7 +4,7 @@ export interface CreateTransactionDTO {
   /** Integer cents — floats are rejected by the domain. */
   amountCents: number;
   currency: string;
-  type: 'DEBIT' | 'CREDIT';
-  description: string;
+  type: 'INCOME' | 'EXPENSE';
+  note: string;
   date: string; // ISO 8601 format
 }

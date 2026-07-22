@@ -13,14 +13,14 @@ export class TransactionService {
 
     let newBalance: Money;
 
-    if (transaction.isDebit()) {
+    if (transaction.isExpense()) {
       if (!account.canDebit(transaction.amount)) {
-        throw new Error('Insufficient funds for debit transaction');
+        throw new Error('Insufficient funds for expense transaction');
       }
       newBalance = account.balance.subtract(transaction.amount);
     } else {
       if (!account.canCredit()) {
-        throw new Error('Account cannot accept credits');
+        throw new Error('Account cannot accept income');
       }
       newBalance = account.balance.add(transaction.amount);
     }
@@ -37,7 +37,7 @@ export class TransactionService {
     let balance = Money.zero(currency);
 
     for (const transaction of transactions) {
-      if (transaction.isCredit()) {
+      if (transaction.isIncome()) {
         balance = balance.add(transaction.amount);
       } else {
         balance = balance.subtract(transaction.amount);

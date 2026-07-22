@@ -7,7 +7,7 @@ export interface TransactionProps {
   categoryId: string | null;
   amount: Money;
   type: TransactionType;
-  description: string;
+  note: string;
   date: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -19,7 +19,7 @@ export interface CreateTransactionProps {
   categoryId?: string | null;
   amount: Money;
   type: TransactionType;
-  description: string;
+  note: string;
   date: Date;
 }
 
@@ -61,12 +61,12 @@ export class Transaction {
       throw new Error('Category ID must not be empty when provided');
     }
 
-    if (!props.description || props.description.trim().length === 0) {
-      throw new Error('Transaction description is required');
+    if (!props.note || props.note.trim().length === 0) {
+      throw new Error('Transaction note is required');
     }
 
-    if (props.description.length > 500) {
-      throw new Error('Transaction description must not exceed 500 characters');
+    if (props.note.length > 500) {
+      throw new Error('Transaction note must not exceed 500 characters');
     }
 
     if (props.date > new Date()) {
@@ -98,8 +98,8 @@ export class Transaction {
     return this.props.type;
   }
 
-  get description(): string {
-    return this.props.description;
+  get note(): string {
+    return this.props.note;
   }
 
   get date(): Date {
@@ -114,11 +114,11 @@ export class Transaction {
     return this.props.updatedAt;
   }
 
-  isDebit(): boolean {
-    return this.props.type.isDebit();
+  isExpense(): boolean {
+    return this.props.type.isExpense();
   }
 
-  isCredit(): boolean {
-    return this.props.type.isCredit();
+  isIncome(): boolean {
+    return this.props.type.isIncome();
   }
 }
