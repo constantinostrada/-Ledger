@@ -21,6 +21,9 @@ import { CreateTransactionUseCase } from '@application/use-cases/CreateTransacti
 import { GetTransactionsUseCase } from '@application/use-cases/GetTransactionsUseCase';
 import { SetBudgetUseCase } from '@application/use-cases/SetBudgetUseCase';
 import { GetBudgetsUseCase } from '@application/use-cases/GetBudgetsUseCase';
+import { GetSpendByCategoryReportUseCase } from '@application/use-cases/GetSpendByCategoryReportUseCase';
+import { GetIncomeVsExpenseReportUseCase } from '@application/use-cases/GetIncomeVsExpenseReportUseCase';
+import { GetNetWorthReportUseCase } from '@application/use-cases/GetNetWorthReportUseCase';
 import { CreateRecurringRuleUseCase } from '@application/use-cases/CreateRecurringRuleUseCase';
 import { ListRecurringRulesUseCase } from '@application/use-cases/ListRecurringRulesUseCase';
 import { MaterializeRecurringTransactionsUseCase } from '@application/use-cases/MaterializeRecurringTransactionsUseCase';
@@ -115,6 +118,22 @@ export class Container {
     this.transactionRepository
   );
 
+  private getSpendByCategoryReportUseCase = new GetSpendByCategoryReportUseCase(
+    this.transactionRepository,
+    this.categoryRepository,
+    this.userRepository
+  );
+
+  private getIncomeVsExpenseReportUseCase = new GetIncomeVsExpenseReportUseCase(
+    this.transactionRepository,
+    this.userRepository
+  );
+
+  private getNetWorthReportUseCase = new GetNetWorthReportUseCase(
+    this.accountRepository,
+    this.userRepository
+  );
+
   private createRecurringRuleUseCase = new CreateRecurringRuleUseCase(
     this.recurringRuleRepository,
     this.accountRepository,
@@ -205,6 +224,18 @@ export class Container {
 
   getGetBudgetsUseCase(): GetBudgetsUseCase {
     return this.getBudgetsUseCase;
+  }
+
+  getGetSpendByCategoryReportUseCase(): GetSpendByCategoryReportUseCase {
+    return this.getSpendByCategoryReportUseCase;
+  }
+
+  getGetIncomeVsExpenseReportUseCase(): GetIncomeVsExpenseReportUseCase {
+    return this.getIncomeVsExpenseReportUseCase;
+  }
+
+  getGetNetWorthReportUseCase(): GetNetWorthReportUseCase {
+    return this.getNetWorthReportUseCase;
   }
 
   getCreateRecurringRuleUseCase(): CreateRecurringRuleUseCase {

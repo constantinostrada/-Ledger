@@ -7,6 +7,7 @@ import { IAccountRepository } from '@domain/repositories/IAccountRepository';
 import { ICategoryRepository } from '@domain/repositories/ICategoryRepository';
 import {
   ITransactionRepository,
+  MonthlyTypeTotal,
   TransactionFilter,
 } from '@domain/repositories/ITransactionRepository';
 import { IUserRepository } from '@domain/repositories/IUserRepository';
@@ -118,6 +119,14 @@ class FakeTransactionRepository implements ITransactionRepository {
 
   async sumExpensesByCategory(): Promise<Map<string, number>> {
     return new Map();
+  }
+
+  async sumExpensesGroupedByCategory(): Promise<Map<string | null, number>> {
+    return new Map();
+  }
+
+  async sumByTypePerMonth(): Promise<MonthlyTypeTotal[]> {
+    return [];
   }
 }
 

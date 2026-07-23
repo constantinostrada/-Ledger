@@ -32,6 +32,25 @@ export class BudgetPeriod {
     return new Date(Date.UTC(this.year, this.month, 1));
   }
 
+  /** The calendar month immediately after this one. */
+  next(): BudgetPeriod {
+    return this.month === 12
+      ? new BudgetPeriod(this.year + 1, 1)
+      : new BudgetPeriod(this.year, this.month + 1);
+  }
+
+  /**
+   * Whole months from this month to the other (0 for the same month,
+   * negative when the other month is earlier).
+   */
+  monthsUntil(other: BudgetPeriod): number {
+    return (other.year - this.year) * 12 + (other.month - this.month);
+  }
+
+  isAfter(other: BudgetPeriod): boolean {
+    return other.monthsUntil(this) > 0;
+  }
+
   equals(other: BudgetPeriod): boolean {
     return this.year === other.year && this.month === other.month;
   }

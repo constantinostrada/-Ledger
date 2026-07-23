@@ -9,6 +9,14 @@ export interface TransactionFilter {
   dateTo?: Date;
 }
 
+export interface MonthlyTypeTotal {
+  /** Calendar month, formatted YYYY-MM (UTC). */
+  month: string;
+  type: 'INCOME' | 'EXPENSE';
+  /** Sum in the user's base currency, integer cents. */
+  totalCents: number;
+}
+
 export interface ITransactionRepository {
   findById(id: string): Promise<Transaction | null>;
   findByAccountId(accountId: string): Promise<Transaction[]>;
@@ -38,4 +46,24 @@ export interface ITransactionRepository {
     dateFrom: Date,
     dateToExclusive: Date
   ): Promise<Map<string, number>>;
+  /**
+   * Sums EXPENSE amounts (base-currency integer cents) per category across
+   * ALL of the user's accounts within [dateFrom, dateToExclusive), with no
+   * category filter. The `null` key collects uncategorized expenses.
+   */
+  sumExpensesGroupedByCategory(
+    userId: string,
+    dateFrom: Date,
+    dateToExclusive: Date
+  ): Promise<Map<string | null, number>>;
+  /**
+   * Sums amounts (base-currency integer cents) per calendar month (UTC) and
+   * transaction type across the user's accounts within
+   * [dateFrom, dateToExclusive). Months with no transactions are absent.
+   */
+  sumByTypePerMonth(
+    userId: string,
+    dateFrom: Date,
+    dateToExclusive: Date
+  ): Promise<MonthlyTypeTotal[]>;
 }

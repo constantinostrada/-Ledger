@@ -7,6 +7,7 @@ import {
 import { Transaction } from '@domain/entities/Transaction';
 import {
   ITransactionRepository,
+  MonthlyTypeTotal,
   TransactionFilter,
 } from '@domain/repositories/ITransactionRepository';
 import { Money } from '@domain/value-objects/Money';
@@ -122,6 +123,70 @@ export class PrismaTransactionRepository implements ITransactionRepository {
     }
 
     return spent;
+  }
+
+  /**
+   * Report variant of sumExpensesByCategory: no category filter, so the
+   * whole month's spend is grouped in one query and uncategorized expenses
+   * (categoryId null) are kept under the `null` key instead of dropped.
+   */
+  async sumExpensesGroupedByCategory(
+    userId: string,
+    dateFrom: Date,
+    dateToExclusive: Date
+  ): Promise<Map<string | null, number>> {
+    const sums = await this.prisma.transaction.groupBy({
+      by: ['categoryId'],
+      where: {
+        // Ownership is enforced through the account relation, so the report
+        // can never aggregate another user's transactions.
+        account: { userId },
+        type: 'EXPENSE',
+        date: { gte: dateFrom, lt: dateToExclusive },
+      },
+      _sum: { baseAmountCents: true },
+    });
+
+    const spent = new Map<string | null, number>();
+    for (const sum of sums) {
+      spent.set(sum.categoryId, sum._sum.baseAmountCents ?? 0);
+    }
+    return spent;
+  }
+
+  /**
+   * Raw SQL because Prisma's groupBy cannot group by an expression
+   * (date_trunc). One query covers the whole series; months without
+   * transactions simply produce no row. Sums base-currency cents so accounts
+   * in different currencies aggregate correctly. SUM() returns bigint in
+   * Postgres, hence the ::int cast back to integer cents.
+   */
+  async sumByTypePerMonth(
+    userId: string,
+    dateFrom: Date,
+    dateToExclusive: Date
+  ): Promise<MonthlyTypeTotal[]> {
+    const rows = await this.prisma.$queryRaw<
+      Array<{ month: string; type: 'INCOME' | 'EXPENSE'; total_cents: number }>
+    >`
+      SELECT
+        to_char(date_trunc('month', t.date), 'YYYY-MM') AS month,
+        t.type::text AS type,
+        SUM(t.base_amount_cents)::int AS total_cents
+      FROM transactions t
+      JOIN accounts a ON a.id = t.account_id
+      WHERE a.user_id = ${userId}
+        AND t.date >= ${dateFrom}
+        AND t.date < ${dateToExclusive}
+      GROUP BY 1, 2
+      ORDER BY 1
+    `;
+
+    return rows.map((row) => ({
+      month: row.month,
+      type: row.type,
+      totalCents: row.total_cents,
+    }));
   }
 
   private toRow(transaction: Transaction) {
