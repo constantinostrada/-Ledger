@@ -9,6 +9,8 @@ export function toAccountDTO(account: Account): AccountDTO {
     type: account.type.getValue(),
     balanceCents: account.balance.getCents(),
     currency: account.balance.getCurrency(),
+    balanceBaseCents: account.balanceBase.getCents(),
+    baseCurrency: account.balanceBase.getCurrency(),
     isActive: account.isActive,
     createdAt: account.createdAt.toISOString(),
     updatedAt: account.updatedAt.toISOString(),

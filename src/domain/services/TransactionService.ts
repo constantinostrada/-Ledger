@@ -11,6 +11,14 @@ export class TransactionService {
       throw new Error('Transaction does not belong to this account');
     }
 
+    // Each account holds a single currency; cross-currency values only meet
+    // after conversion into the user's base currency.
+    if (
+      transaction.amount.getCurrency() !== account.balance.getCurrency()
+    ) {
+      throw new Error('Transaction currency must match the account currency');
+    }
+
     let newBalance: Money;
 
     if (transaction.isExpense()) {

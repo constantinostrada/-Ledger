@@ -37,6 +37,7 @@ export class PrismaUserRepository implements IUserRepository {
       email: user.email,
       passwordHash: user.passwordHash,
       name: user.name,
+      baseCurrency: user.baseCurrency,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -48,6 +49,7 @@ export class PrismaUserRepository implements IUserRepository {
       email: row.email,
       passwordHash: row.passwordHash,
       name: row.name,
+      baseCurrency: row.baseCurrency,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

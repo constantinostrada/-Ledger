@@ -8,6 +8,11 @@ export interface TransactionProps {
   /** Set when this transaction was materialized from a recurring rule. */
   recurringRuleId: string | null;
   amount: Money;
+  /**
+   * The original amount converted into the user's base currency at posting
+   * time — the value every balance/report aggregates.
+   */
+  baseAmount: Money;
   type: TransactionType;
   note: string;
   date: Date;
@@ -21,6 +26,7 @@ export interface CreateTransactionProps {
   categoryId?: string | null;
   recurringRuleId?: string | null;
   amount: Money;
+  baseAmount: Money;
   type: TransactionType;
   note: string;
   date: Date;
@@ -87,6 +93,10 @@ export class Transaction {
     if (!props.amount.isPositive()) {
       throw new Error('Transaction amount must be positive');
     }
+
+    if (!props.baseAmount.isPositive()) {
+      throw new Error('Transaction base amount must be positive');
+    }
   }
 
   get id(): string {
@@ -107,6 +117,10 @@ export class Transaction {
 
   get amount(): Money {
     return this.props.amount;
+  }
+
+  get baseAmount(): Money {
+    return this.props.baseAmount;
   }
 
   get type(): TransactionType {

@@ -31,9 +31,21 @@ export class CreateRecurringRuleUseCase {
 
     if (dto.categoryId) {
       const category = await this.categoryRepository.findById(dto.categoryId);
-      if (!category) {
+      // Same error for missing and foreign categories, so responses don't
+      // reveal which category ids exist for other users.
+      if (!category || category.userId !== userId) {
         throw new Error('Category not found');
       }
+    }
+
+    // Each account holds a single currency; the rule's occurrences will
+    // post into this account, so its currency must match.
+    if (
+      dto.currency.toUpperCase() !== account.balance.getCurrency()
+    ) {
+      throw new Error(
+        'Recurring rule currency must match the account currency'
+      );
     }
 
     const rule = RecurringRule.create({

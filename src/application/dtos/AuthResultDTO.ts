@@ -4,5 +4,6 @@ export interface AuthResultDTO {
     id: string;
     email: string;
     name: string | null;
+    baseCurrency: string;
   };
 }

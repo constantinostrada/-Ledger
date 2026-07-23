@@ -87,7 +87,9 @@ export class PrismaTransactionRepository implements ITransactionRepository {
   /**
    * Spent-per-category is never stored: it is derived here in SQL (mirrors
    * PrismaAccountRepository.deriveBalances) so budgeting N categories costs
-   * one query instead of loading every transaction.
+   * one query instead of loading every transaction. Sums the base-currency
+   * values so categories spanning accounts in different currencies
+   * aggregate correctly.
    */
   async sumExpensesByCategory(
     userId: string,
@@ -110,12 +112,12 @@ export class PrismaTransactionRepository implements ITransactionRepository {
         type: 'EXPENSE',
         date: { gte: dateFrom, lt: dateToExclusive },
       },
-      _sum: { amountCents: true },
+      _sum: { baseAmountCents: true },
     });
 
     for (const sum of sums) {
       if (sum.categoryId !== null) {
-        spent.set(sum.categoryId, sum._sum.amountCents ?? 0);
+        spent.set(sum.categoryId, sum._sum.baseAmountCents ?? 0);
       }
     }
 
@@ -130,6 +132,8 @@ export class PrismaTransactionRepository implements ITransactionRepository {
       recurringRuleId: transaction.recurringRuleId,
       amountCents: transaction.amount.getCents(),
       currency: transaction.amount.getCurrency(),
+      baseAmountCents: transaction.baseAmount.getCents(),
+      baseCurrency: transaction.baseAmount.getCurrency(),
       type: transaction.type.getValue() as PrismaTransactionType,
       note: transaction.note,
       date: transaction.date,
@@ -145,6 +149,7 @@ export class PrismaTransactionRepository implements ITransactionRepository {
       categoryId: row.categoryId,
       recurringRuleId: row.recurringRuleId,
       amount: Money.fromCents(row.amountCents, row.currency),
+      baseAmount: Money.fromCents(row.baseAmountCents, row.baseCurrency),
       type: TransactionType.fromString(row.type),
       note: row.note,
       date: row.date,

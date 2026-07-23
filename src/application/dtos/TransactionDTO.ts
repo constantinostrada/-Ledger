@@ -5,6 +5,9 @@ export interface TransactionDTO {
   recurringRuleId: string | null;
   amountCents: number;
   currency: string;
+  /** The original amount converted into the user's base currency. */
+  baseAmountCents: number;
+  baseCurrency: string;
   type: string;
   note: string;
   date: string;

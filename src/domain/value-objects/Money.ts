@@ -56,6 +56,20 @@ export class Money {
     return Money.fromCents(Math.round(this.cents * factor), this.currency);
   }
 
+  /**
+   * Converts into another currency at the given rate (units of the target
+   * currency per unit of this one), rounding to the nearest cent.
+   */
+  convertTo(currency: string, rate: number): Money {
+    if (typeof rate !== 'number' || !isFinite(rate) || rate <= 0) {
+      throw new Error('Exchange rate must be a positive number');
+    }
+    if (currency.toUpperCase() === this.currency) {
+      return this;
+    }
+    return Money.fromCents(Math.round(this.cents * rate), currency);
+  }
+
   isGreaterThan(other: Money): boolean {
     this.ensureSameCurrency(other);
     return this.cents > other.cents;

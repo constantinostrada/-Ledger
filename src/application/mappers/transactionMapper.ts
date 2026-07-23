@@ -9,6 +9,8 @@ export function toTransactionDTO(transaction: Transaction): TransactionDTO {
     recurringRuleId: transaction.recurringRuleId,
     amountCents: transaction.amount.getCents(),
     currency: transaction.amount.getCurrency(),
+    baseAmountCents: transaction.baseAmount.getCents(),
+    baseCurrency: transaction.baseAmount.getCurrency(),
     type: transaction.type.getValue(),
     note: transaction.note,
     date: transaction.date.toISOString(),

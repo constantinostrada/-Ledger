@@ -4,6 +4,8 @@ export interface UserProps {
   /** Opaque hash produced by the application's password hasher port. */
   passwordHash: string;
   name: string | null;
+  /** Currency every balance/report is aggregated in. */
+  baseCurrency: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,9 +15,11 @@ export interface CreateUserProps {
   email: string;
   passwordHash: string;
   name?: string | null;
+  baseCurrency?: string;
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CURRENCY_PATTERN = /^[A-Z]{3}$/;
 
 export class User {
   private readonly props: UserProps;
@@ -31,6 +35,7 @@ export class User {
       ...props,
       email: props.email.trim().toLowerCase(),
       name: props.name ?? null,
+      baseCurrency: (props.baseCurrency ?? 'USD').toUpperCase(),
       createdAt: now,
       updatedAt: now,
     });
@@ -67,6 +72,10 @@ export class User {
     if (props.name !== null && props.name.length > 100) {
       throw new Error('Name must not exceed 100 characters');
     }
+
+    if (!CURRENCY_PATTERN.test(props.baseCurrency)) {
+      throw new Error('Base currency must be a 3-letter code');
+    }
   }
 
   get id(): string {
@@ -83,6 +92,10 @@ export class User {
 
   get name(): string | null {
     return this.props.name;
+  }
+
+  get baseCurrency(): string {
+    return this.props.baseCurrency;
   }
 
   get createdAt(): Date {

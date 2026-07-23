@@ -8,7 +8,10 @@ import { PrismaUserRepository } from '@infrastructure/repositories/PrismaUserRep
 import { UuidGenerator } from '@infrastructure/id-generation/UuidGenerator';
 import { BcryptPasswordHasher } from '@infrastructure/security/BcryptPasswordHasher';
 import { JwtTokenService } from '@infrastructure/security/JwtTokenService';
+import { FixedExchangeRateProvider } from '@infrastructure/exchange-rates/FixedExchangeRateProvider';
 import { ITokenService } from '@application/ports/ITokenService';
+import { IExchangeRateProvider } from '@application/ports/IExchangeRateProvider';
+import { BaseCurrencyConverter } from '@application/services/BaseCurrencyConverter';
 import { TransactionService } from '@domain/services/TransactionService';
 import { CreateAccountUseCase } from '@application/use-cases/CreateAccountUseCase';
 import { GetAccountsByUserUseCase } from '@application/use-cases/GetAccountsByUserUseCase';
@@ -23,6 +26,10 @@ import { ListRecurringRulesUseCase } from '@application/use-cases/ListRecurringR
 import { MaterializeRecurringTransactionsUseCase } from '@application/use-cases/MaterializeRecurringTransactionsUseCase';
 import { RegisterUserUseCase } from '@application/use-cases/RegisterUserUseCase';
 import { LoginUserUseCase } from '@application/use-cases/LoginUserUseCase';
+import { CreateCategoryUseCase } from '@application/use-cases/CreateCategoryUseCase';
+import { ListCategoriesUseCase } from '@application/use-cases/ListCategoriesUseCase';
+import { UpdateCategoryUseCase } from '@application/use-cases/UpdateCategoryUseCase';
+import { DeleteCategoryUseCase } from '@application/use-cases/DeleteCategoryUseCase';
 
 function requireJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -49,14 +56,23 @@ export class Container {
   private idGenerator = new UuidGenerator();
   private passwordHasher = new BcryptPasswordHasher();
   private tokenService: ITokenService = new JwtTokenService(requireJwtSecret());
+  private exchangeRateProvider: IExchangeRateProvider =
+    new FixedExchangeRateProvider();
 
   // Domain Services
   private transactionService = new TransactionService();
+
+  // Application Services
+  private baseCurrencyConverter = new BaseCurrencyConverter(
+    this.exchangeRateProvider
+  );
 
   // Use Cases
   private createAccountUseCase = new CreateAccountUseCase(
     this.accountRepository,
     this.transactionRepository,
+    this.userRepository,
+    this.baseCurrencyConverter,
     this.idGenerator
   );
 
@@ -76,7 +92,9 @@ export class Container {
     this.transactionRepository,
     this.accountRepository,
     this.categoryRepository,
+    this.userRepository,
     this.transactionService,
+    this.baseCurrencyConverter,
     this.idGenerator
   );
 
@@ -112,14 +130,34 @@ export class Container {
     new MaterializeRecurringTransactionsUseCase(
       this.recurringRuleRepository,
       this.transactionRepository,
+      this.userRepository,
+      this.baseCurrencyConverter,
       this.idGenerator
     );
 
   private registerUserUseCase = new RegisterUserUseCase(
     this.userRepository,
+    this.categoryRepository,
     this.passwordHasher,
     this.tokenService,
     this.idGenerator
+  );
+
+  private createCategoryUseCase = new CreateCategoryUseCase(
+    this.categoryRepository,
+    this.idGenerator
+  );
+
+  private listCategoriesUseCase = new ListCategoriesUseCase(
+    this.categoryRepository
+  );
+
+  private updateCategoryUseCase = new UpdateCategoryUseCase(
+    this.categoryRepository
+  );
+
+  private deleteCategoryUseCase = new DeleteCategoryUseCase(
+    this.categoryRepository
   );
 
   private loginUserUseCase = new LoginUserUseCase(
@@ -179,6 +217,22 @@ export class Container {
 
   getMaterializeRecurringTransactionsUseCase(): MaterializeRecurringTransactionsUseCase {
     return this.materializeRecurringTransactionsUseCase;
+  }
+
+  getCreateCategoryUseCase(): CreateCategoryUseCase {
+    return this.createCategoryUseCase;
+  }
+
+  getListCategoriesUseCase(): ListCategoriesUseCase {
+    return this.listCategoriesUseCase;
+  }
+
+  getUpdateCategoryUseCase(): UpdateCategoryUseCase {
+    return this.updateCategoryUseCase;
+  }
+
+  getDeleteCategoryUseCase(): DeleteCategoryUseCase {
+    return this.deleteCategoryUseCase;
   }
 
   getRegisterUserUseCase(): RegisterUserUseCase {

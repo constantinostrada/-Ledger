@@ -1,18 +1,49 @@
 import { describe, expect, it } from 'vitest';
 import { Transaction } from '@domain/entities/Transaction';
 import { RecurringRule } from '@domain/entities/RecurringRule';
+import { User } from '@domain/entities/User';
 import { IRecurringRuleRepository } from '@domain/repositories/IRecurringRuleRepository';
 import {
   ITransactionRepository,
   TransactionFilter,
 } from '@domain/repositories/ITransactionRepository';
+import { IUserRepository } from '@domain/repositories/IUserRepository';
 import { Money } from '@domain/value-objects/Money';
 import { TransactionType } from '@domain/value-objects/TransactionType';
 import { RecurrenceInterval } from '@domain/value-objects/RecurrenceInterval';
 import { MaterializeRecurringTransactionsUseCase } from '@application/use-cases/MaterializeRecurringTransactionsUseCase';
 import { IIdGenerator } from '@application/ports/IIdGenerator';
+import { BaseCurrencyConverter } from '@application/services/BaseCurrencyConverter';
 
 const USER_ID = 'user-1';
+
+class StubUserRepository implements IUserRepository {
+  private readonly user = User.create({
+    id: USER_ID,
+    email: 'user1@ledger.dev',
+    passwordHash: 'hash',
+    baseCurrency: 'USD',
+  });
+
+  async findById(id: string): Promise<User | null> {
+    return id === this.user.id ? this.user : null;
+  }
+
+  async findByEmail(): Promise<User | null> {
+    return null;
+  }
+
+  async save(): Promise<void> {}
+  async update(): Promise<void> {}
+  async delete(): Promise<void> {}
+}
+
+// Everything in these tests is USD, so the provider is never consulted.
+const usdOnlyConverter = new BaseCurrencyConverter({
+  getRate: async () => {
+    throw new Error('unexpected rate lookup');
+  },
+});
 
 class FakeRecurringRuleRepository implements IRecurringRuleRepository {
   constructor(private rules: RecurringRule[]) {}
@@ -173,6 +204,8 @@ describe('MaterializeRecurringTransactionsUseCase (the sweep)', () => {
     const useCase = new MaterializeRecurringTransactionsUseCase(
       new FakeRecurringRuleRepository([rule]),
       transactionRepository,
+      new StubUserRepository(),
+      usdOnlyConverter,
       new SequentialIdGenerator()
     );
 
@@ -196,6 +229,8 @@ describe('MaterializeRecurringTransactionsUseCase (the sweep)', () => {
     const useCase = new MaterializeRecurringTransactionsUseCase(
       new FakeRecurringRuleRepository([rule]),
       transactionRepository,
+      new StubUserRepository(),
+      usdOnlyConverter,
       new SequentialIdGenerator()
     );
 
@@ -221,6 +256,8 @@ describe('MaterializeRecurringTransactionsUseCase (the sweep)', () => {
     const useCase = new MaterializeRecurringTransactionsUseCase(
       ruleRepository,
       transactionRepository,
+      new StubUserRepository(),
+      usdOnlyConverter,
       new SequentialIdGenerator()
     );
 

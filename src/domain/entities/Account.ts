@@ -11,6 +11,12 @@ export interface AccountProps {
    * It is NEVER persisted — repositories must compute it from transactions.
    */
   balance: Money;
+  /**
+   * Derived snapshot like `balance`, but summing the transactions' values
+   * converted into the user's base currency, so balances across accounts
+   * holding different currencies can be aggregated.
+   */
+  balanceBase: Money;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -22,6 +28,7 @@ export interface CreateAccountProps {
   name: string;
   type: AccountType;
   balance: Money;
+  balanceBase: Money;
 }
 
 export class Account {
@@ -85,6 +92,10 @@ export class Account {
 
   get balance(): Money {
     return this.props.balance;
+  }
+
+  get balanceBase(): Money {
+    return this.props.balanceBase;
   }
 
   get isActive(): boolean {

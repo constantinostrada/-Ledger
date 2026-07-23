@@ -19,7 +19,9 @@ export class SetBudgetUseCase {
 
   async execute(userId: string, dto: SetBudgetDTO): Promise<BudgetDTO> {
     const category = await this.categoryRepository.findById(dto.categoryId);
-    if (!category) {
+    // Same error for missing and foreign categories, so responses don't
+    // reveal which category ids exist for other users.
+    if (!category || category.userId !== userId) {
       throw new Error('Category not found');
     }
 

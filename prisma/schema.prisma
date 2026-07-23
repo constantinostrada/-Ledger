@@ -26,14 +26,18 @@ enum RecurrenceInterval {
 }
 
 model User {
-  id           String    @id
-  email        String    @unique @db.VarChar(255)
-  passwordHash String    @map("password_hash")
-  name         String?   @db.VarChar(100)
+  id           String @id
+  email        String @unique @db.VarChar(255)
+  passwordHash String @map("password_hash")
+  name         String? @db.VarChar(100)
+  // Every balance/report aggregates in this currency; each transaction
+  // stores its value converted into it at posting time.
+  baseCurrency String    @default("USD") @map("base_currency") @db.Char(3)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @default(now()) @map("updated_at")
   accounts     Account[]
   budgets      Budget[]
+  categories   Category[]
 
   @@map("users")
 }
@@ -66,8 +70,13 @@ model Transaction {
   recurringRuleId String?         @map("recurring_rule_id")
   recurringRule   RecurringRule?  @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
   // Money is ALWAYS integer cents — never floats/decimals.
-  amountCents     Int             @map("amount_cents")
-  currency        String          @default("USD") @db.Char(3)
+  amountCents Int    @map("amount_cents")
+  currency    String @default("USD") @db.Char(3)
+  // The original amount converted into the user's base currency at posting
+  // time (integer cents). Snapshotted so aggregates never depend on a
+  // live rate lookup.
+  baseAmountCents Int             @map("base_amount_cents")
+  baseCurrency    String          @default("USD") @map("base_currency") @db.Char(3)
   type            TransactionType
   note            String          @db.VarChar(500)
   date            DateTime
@@ -106,14 +115,23 @@ model RecurringRule {
 }
 
 model Category {
-  id             String          @id
-  name           String          @unique @db.VarChar(100)
+  id     String @id
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name   String @db.VarChar(100)
+  // Reuses the INCOME/EXPENSE vocabulary: a category classifies one side.
+  kind   TransactionType
+  // Hex color for UI display, e.g. "#22C55E".
+  color          String          @db.VarChar(7)
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @default(now()) @map("updated_at")
   transactions   Transaction[]
   budgets        Budget[]
   recurringRules RecurringRule[]
 
+  // Names are unique per user, not globally: two users can both have "Rent".
+  @@unique([userId, name])
+  @@index([userId])
   @@map("categories")
 }
 

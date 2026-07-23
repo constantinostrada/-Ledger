@@ -31,7 +31,12 @@ export class LoginUserUseCase {
 
     return {
       token: this.tokenService.sign({ userId: user.id }),
-      user: { id: user.id, email: user.email, name: user.name },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        baseCurrency: user.baseCurrency,
+      },
     };
   }
 }
