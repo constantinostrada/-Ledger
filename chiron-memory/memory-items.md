@@ -5,29 +5,29 @@
 
 ## architecture · 16
 
-### Category is now a per-user owned entity with a required `userId` FK (cascade delete),…
-Category is now a per-user owned entity with a required `userId` FK (cascade delete), plus `kind` (INCOME/EXPENSE, reusing the existing TransactionType enum) and `color` (hex, VARCHAR(7)) columns.
-- **Why:** B5 required category CRUD scoped per user with income/expense kind and color, extending the global Category added in B1.
-- **Where:** `prisma/schema.prisma, src/domain/entities/Category.ts, migration 20260723000000_categories_per_user.`
-
 ### Every new user gets a default set of 9 starter categories (defaultCategorySeeds() in…
 Every new user gets a default set of 9 starter categories (defaultCategorySeeds() in src/domain/services/defaultCategories.ts) seeded during RegisterUserUseCase via ICategoryRepository.saveAll.
 - **Where:** `src/domain/services/defaultCategories.ts, src/application/use-cases/RegisterUserUseCase.ts.`
+
+### PrismaAccountRepository.deriveBalances computes both the original-currency balance and…
+PrismaAccountRepository.deriveBalances computes both the original-currency balance and the base-currency balance in a single groupBy query, labeling the base amount with the user's base currency via the account→user relation
+- **Why:** avoids N+1 queries or a second aggregation pass per account
+- **Where:** `src/infrastructure/repositories/PrismaAccountRepository.ts`
 
 ### An IExchangeRateProvider port plus a BaseCurrencyConverter application service is shared…
 An IExchangeRateProvider port plus a BaseCurrencyConverter application service is shared by all three transaction-creating use cases (CreateTransaction, CreateAccount's opening balance, and the recurring sweep)
 - **Why:** single place to fetch a rate and convert to base currency, avoiding duplicated conversion logic per use case
 - **Where:** `src/application/ports/IExchangeRateProvider.ts, src/application/services/BaseCurrencyConverter.ts`
 
+### Category is now a per-user owned entity with a required `userId` FK (cascade delete),…
+Category is now a per-user owned entity with a required `userId` FK (cascade delete), plus `kind` (INCOME/EXPENSE, reusing the existing TransactionType enum) and `color` (hex, VARCHAR(7)) columns.
+- **Why:** B5 required category CRUD scoped per user with income/expense kind and color, extending the global Category added in B1.
+- **Where:** `prisma/schema.prisma, src/domain/entities/Category.ts, migration 20260723000000_categories_per_user.`
+
 ### FixedExchangeRateProvider implements IExchangeRateProvider using a static USD-pivot rate…
 FixedExchangeRateProvider implements IExchangeRateProvider using a static USD-pivot rate table
 - **Why:** placeholder infra so a live-rate client can later drop in behind the same port without touching domain/application code
 - **Where:** `src/infrastructure/exchange-rates/FixedExchangeRateProvider.ts`
-
-### PrismaAccountRepository.deriveBalances computes both the original-currency balance and…
-PrismaAccountRepository.deriveBalances computes both the original-currency balance and the base-currency balance in a single groupBy query, labeling the base amount with the user's base currency via the account→user relation
-- **Why:** avoids N+1 queries or a second aggregation pass per account
-- **Where:** `src/infrastructure/repositories/PrismaAccountRepository.ts`
 
 ### Derived-balance & budget architecture
 Derived-balance & budget architecture: no stored balances or spent totals
@@ -35,40 +35,39 @@ Derived-balance & budget architecture: no stored balances or spent totals
 - **Learned:** Account.balance_cents column dropped; balance computed as credits−debits via Prisma groupBy aggregate over transactions in PrismaAccountRepository · Domain Account.balance is a hydrated read-only snapshot from the repository; canDebit checks run against this derived value · initialBalanceCents materialized as an 'Opening balance' CREDIT transaction on account creation, not a stored field · budgets table has no spent_cents column; spent computed on-the-fly from period transactions via PrismaTransactionRepository.sumExpensesByCategory · budgets table stores limit_cents (Int) and period (Char(7) 'YYYY-MM') with unique constraint on (userId, categoryId, period) for exactly one limit per category per month · Budget entity enforces positive limitCents invariant in constructor/create() · Transaction entity enforces positive-amount invariant in create()/reconstitute() and now carries optional categoryId with SetNull FK on category delete · All monetary fields stored as Int cents columns (balance_cents, amount_cents); DTOs use explicit *Cents names with zod .int() validation; floats rejected at HTTP edge and domain layer · Setting a budget is idempotent upsert (PUT /api/budgets, 200) on category+period; re-setting updates existing row · PUT chosen over POST to signal idempotent set-semantics for category+period upsert · SetBudgetUseCase checks category existence via ICategoryRepository before upserting, returning 404 for nonexistent categories · GetBudgetsUseCase computes spent for all budgets in a period with single batched sumExpensesByCategory call (all categoryIds at once), avoiding N+1 queries · ITransactionRepository extended with sumExpensesByCategory(userId, categoryIds, dateFrom, dateToExclusive) as single Prisma groupBy aggregate over EXPENSE transactions · sumExpensesByCategory enforces ownership through account→user relation in Prisma query itself, preventing cross-user category leakage · Category is a new domain entity (added in B1) with ICategoryRepository port and PrismaCategoryRepository implementation alongside pre-existing Account/Transaction ports · Posting an expense that would make balance negative rejected with 'Insufficient funds for expense transaction'; balance updates immediately on transaction posting
 - **Where:** `prisma/schema.prisma, PrismaAccountRepository.ts, PrismaTransactionRepository.ts, SetBudgetUseCase.ts, GetBudgetsUseCase.ts, CreateAccountUseCase.ts, src/app/api/budgets/route.ts, Account.ts, Budget.ts, Transaction.ts, Category.ts, migration 20260722000000_derive_account_balance, migration 20260722221457_add_budgets`
 
-### GetBudgetsUseCase computes spent for every budget in a requested period with a single…
-GetBudgetsUseCase computes spent for every budget in a requested period with a single batched sumExpensesByCategory call (passing all categoryIds at once) rather than one aggregate query per budget, avoiding N+1 queries when listing a month's budgets.
-- **Where:** `GetBudgetsUseCase.ts.`
-
 ### RecurringRule.dueDatesThrough(asOf) generates all occurrence dates from start_date…
 RecurringRule.dueDatesThrough(asOf) generates all occurrence dates from start_date through the current time; MaterializeRecurringTransactionsUseCase (the "sweep") builds one candidate Transaction per due date per rule and bulk-inserts them all at once with duplicate-skipping.
 - **Where:** `src/domain/entities/RecurringRule.ts, src/application/use-cases/MaterializeRecurringTransactionsUseCase.ts.`
 
-### budgets table stores limit_cents (Int, integer cents) and period (Char(7), 'YYYY-MM'),…
-budgets table stores limit_cents (Int, integer cents) and period (Char(7), 'YYYY-MM'), with a unique constraint on (userId, categoryId, period) so there is exactly one limit per category per month.
-- **Where:** `prisma/schema.prisma, migration 20260722221457_add_budgets.`
+### GetBudgetsUseCase computes spent for every budget in a requested period with a single…
+GetBudgetsUseCase computes spent for every budget in a requested period with a single batched sumExpensesByCategory call (passing all categoryIds at once) rather than one aggregate query per budget, avoiding N+1 queries when listing a month's budgets.
+- **Where:** `GetBudgetsUseCase.ts.`
 
 ### ITransactionRepository was extended with sumExpensesByCategory(userId, categoryIds,…
 ITransactionRepository was extended with sumExpensesByCategory(userId, categoryIds, dateFrom, dateToExclusive), implemented as a single Prisma groupBy aggregate over EXPENSE transactions.
 - **Where:** `src/domain/repositories/ITransactionRepository.ts, PrismaTransactionRepository.ts.`
 
-### Domain Account.balance is a hydrated read-only snapshot populated by the repository from…
-Domain Account.balance is a hydrated read-only snapshot populated by the repository from aggregated transactions, not an entity-owned/settable field; canDebit and insufficient-funds checks run against this true derived value.
-- **Where:** `src/domain/entities/Account.ts, src/infrastructure/repositories/PrismaAccountRepository.ts.`
+### budgets table stores limit_cents (Int, integer cents) and period (Char(7), 'YYYY-MM'),…
+budgets table stores limit_cents (Int, integer cents) and period (Char(7), 'YYYY-MM'), with a unique constraint on (userId, categoryId, period) so there is exactly one limit per category per month.
+- **Where:** `prisma/schema.prisma, migration 20260722221457_add_budgets.`
 
 ### `ITransactionRepository.findByAccountIdWithPagination` was replaced by a unified…
 `ITransactionRepository.findByAccountIdWithPagination` was replaced by a unified `findByFilter(filter, limit, offset)`, where `filter` always carries the authenticated `userId`; the Prisma implementation enforces ownership through the account relation join so a foreign `accountId`/`categoryId` can never leak another user's transactions (returns 404 "Account not found" instead).
 - **Learned:** GET /api/transactions now takes optional accountId/categoryId/dateFrom/dateTo filters (all optional) with no-filter meaning "all transactions across the user's accounts, newest first"; inverted date ranges are rejected by a zod refinement.
 - **Where:** `ledger/src/domain/repositories/ITransactionRepository.ts, infrastructure/repositories/PrismaTransactionRepository.ts`
 
+### Domain Account.balance is a hydrated read-only snapshot populated by the repository from…
+Domain Account.balance is a hydrated read-only snapshot populated by the repository from aggregated transactions, not an entity-owned/settable field; canDebit and insufficient-funds checks run against this true derived value.
+- **Where:** `src/domain/entities/Account.ts, src/infrastructure/repositories/PrismaAccountRepository.ts.`
+
 ### Account now has a required FK to User (Account.userId) with cascade delete, migrated via…
 Account now has a required FK to User (Account.userId) with cascade delete, migrated via `add_users` Prisma migration
 - **Why:** introducing per-user auth scoping (B2) required accounts to belong to a real user row, replacing the prior userId-less/ungated account model.
 - **Where:** `prisma/schema.prisma`
 
-### authenticateRequest() is the sole place that extracts/verifies the Bearer JWT and…
-authenticateRequest() is the sole place that extracts/verifies the Bearer JWT and resolves request identity; accounts/transactions routes 401 without a valid token and derive all scoping from it
-- **Why:** centralizes identity extraction so no route/controller can accidentally trust a client-supplied user id.
-- **Where:** `src/interfaces/auth/authenticateRequest.ts`
+### Category is a new domain entity added in B1 (not in the original boilerplate), with its…
+Category is a new domain entity added in B1 (not in the original boilerplate), with its own ICategoryRepository port and PrismaCategoryRepository implementation alongside the pre-existing Account/Transaction ports; Transaction now carries an optional categoryId with an FK that is SetNull on category delete.
+- **Where:** `src/domain/entities/Category.ts, src/domain/repositories/ICategoryRepository.ts, src/infrastructure/repositories/PrismaCategoryRepository.ts, prisma/schema.prisma.`
 
 ### JwtTokenService requires the JWT secret to be passed at construction time (fails fast if…
 JwtTokenService requires the JWT secret to be passed at construction time (fails fast if missing) rather than reading it lazily per-call
@@ -76,38 +75,39 @@ JwtTokenService requires the JWT secret to be passed at construction time (fails
 - **Learned:** prefer constructor-time validation of required secrets over per-call checks.
 - **Where:** `src/infrastructure/security/JwtTokenService.ts, wired in src/interfaces/di/container.ts, JWT_SECRET in .env/.env.example`
 
-### Category is a new domain entity added in B1 (not in the original boilerplate), with its…
-Category is a new domain entity added in B1 (not in the original boilerplate), with its own ICategoryRepository port and PrismaCategoryRepository implementation alongside the pre-existing Account/Transaction ports; Transaction now carries an optional categoryId with an FK that is SetNull on category delete.
-- **Where:** `src/domain/entities/Category.ts, src/domain/repositories/ICategoryRepository.ts, src/infrastructure/repositories/PrismaCategoryRepository.ts, prisma/schema.prisma.`
+### authenticateRequest() is the sole place that extracts/verifies the Bearer JWT and…
+authenticateRequest() is the sole place that extracts/verifies the Bearer JWT and resolves request identity; accounts/transactions routes 401 without a valid token and derive all scoping from it
+- **Why:** centralizes identity extraction so no route/controller can accidentally trust a client-supplied user id.
+- **Where:** `src/interfaces/auth/authenticateRequest.ts`
 
 ## business-rule · 10
+
+### Deleting a category is blocked with 409 if it is referenced by any transaction, recurring…
+Deleting a category is blocked with 409 if it is referenced by any transaction, recurring rule, or budget; there is no auto-reassignment.
+- **Where:** `src/application/use-cases/DeleteCategoryUseCase.ts, ICategoryRepository.isInUse().`
 
 ### A Category's `kind` (INCOME/EXPENSE) is immutable after creation
 A Category's `kind` (INCOME/EXPENSE) is immutable after creation — only `name` (via rename()) and `color` (via changeColor()) can be mutated.
 - **Why:** flipping kind on an existing category would silently change the meaning of budgets/transactions already attached to it.
 - **Where:** `src/domain/entities/Category.ts.`
 
-### Deleting a category is blocked with 409 if it is referenced by any transaction, recurring…
-Deleting a category is blocked with 409 if it is referenced by any transaction, recurring rule, or budget; there is no auto-reassignment.
-- **Where:** `src/application/use-cases/DeleteCategoryUseCase.ts, ICategoryRepository.isInUse().`
+### A recurring rule's currency must match its account's currency, enforced in…
+A recurring rule's currency must match its account's currency, enforced in CreateRecurringRuleUseCase
+- **Why:** keeps the same single-currency-per-account invariant for materialized recurring transactions
+- **Where:** `src/application/use-cases/CreateRecurringRuleUseCase.ts`
 
 ### Each account holds a single currency
 Each account holds a single currency; a transaction's currency must match its account's currency or TransactionService rejects it
 - **Why:** cross-currency values only make sense after conversion to the user's base currency, not at the account level
 - **Where:** `src/domain/services/TransactionService.ts`
 
-### A recurring rule's currency must match its account's currency, enforced in…
-A recurring rule's currency must match its account's currency, enforced in CreateRecurringRuleUseCase
-- **Why:** keeps the same single-currency-per-account invariant for materialized recurring transactions
-- **Where:** `src/application/use-cases/CreateRecurringRuleUseCase.ts`
+### Exceeding a budget is only flagged, never blocked
+Exceeding a budget is only flagged, never blocked — transactions can push spent past the limit, and the API reports remainingCents as negative and percentUsed above 100 with overBudget:true instead of rejecting the transaction or clamping the values.
+- **Where:** `Budget.remaining/percentUsed/isOverBudget, verified against live server with a $1,000 rent budget and $1,200 of rent expenses.`
 
 ### RecurrenceInterval MONTHLY stepping preserves the original start day-of-month and clamps…
 RecurrenceInterval MONTHLY stepping preserves the original start day-of-month and clamps to the last valid day of shorter months (e.g. Jan 31 → Feb 28 → Mar 31) instead of adding a fixed number of days.
 - **Where:** `src/domain/value-objects/RecurrenceInterval.ts.`
-
-### Exceeding a budget is only flagged, never blocked
-Exceeding a budget is only flagged, never blocked — transactions can push spent past the limit, and the API reports remainingCents as negative and percentUsed above 100 with overBudget:true instead of rejecting the transaction or clamping the values.
-- **Where:** `Budget.remaining/percentUsed/isOverBudget, verified against live server with a $1,000 rent budget and $1,200 of rent expenses.`
 
 ### Setting a budget for a category+period is an idempotent upsert (PUT /api/budgets, 200)
 Setting a budget for a category+period is an idempotent upsert (PUT /api/budgets, 200) — re-setting a limit updates the existing budget row rather than creating a duplicate.
@@ -137,14 +137,6 @@ The ledger project had no test framework before this work; vitest was added as t
 - **Why:** keeps existing single-currency users working unchanged while letting new users opt into a non-USD base currency at signup
 - **Where:** `src/domain/entities/User.ts, src/application/dtos/RegisterUserDTO.ts, src/application/use-cases/RegisterUserUseCase.ts`
 
-### Category uniqueness is enforced with `@@unique([userId, name])`, mirroring the same…
-Category uniqueness is enforced with `@@unique([userId, name])`, mirroring the same per-owner uniqueness pattern used elsewhere in the project (e.g. account/user uniqueness) rather than a global unique name.
-- **Where:** `prisma/schema.prisma Category model.`
-
-### Use cases that accept a categoryId (CreateTransactionUseCase, CreateRecurringRuleUseCase,…
-Use cases that accept a categoryId (CreateTransactionUseCase, CreateRecurringRuleUseCase, SetBudgetUseCase) enforce category ownership by masking a foreign/nonexistent category as a generic 'not found' error, the same pattern already used for account ownership checks.
-- **Where:** `src/application/use-cases/CreateTransactionUseCase.ts, CreateRecurringRuleUseCase.ts, SetBudgetUseCase.ts.`
-
 ### Category create/rename duplicate-name checks mirror the existing register-email…
 Category create/rename duplicate-name checks mirror the existing register-email uniqueness pattern (check-then-guard in the use case, not just relying on the DB constraint), and self-rename (same name, same category) is explicitly allowed rather than treated as a duplicate.
 - **Where:** `src/application/use-cases/CreateCategoryUseCase.ts, UpdateCategoryUseCase.ts.`
@@ -153,6 +145,14 @@ Category create/rename duplicate-name checks mirror the existing register-email 
 Budget/report aggregation (sumExpensesByCategory) sums base_amount_cents rather than amount_cents
 - **Why:** a spending category can span accounts in different currencies, so aggregating the original amount_cents would mix currencies incorrectly
 - **Where:** `src/infrastructure/repositories/PrismaTransactionRepository.ts, src/application/use-cases/GetBudgetsUseCase.ts`
+
+### Use cases that accept a categoryId (CreateTransactionUseCase, CreateRecurringRuleUseCase,…
+Use cases that accept a categoryId (CreateTransactionUseCase, CreateRecurringRuleUseCase, SetBudgetUseCase) enforce category ownership by masking a foreign/nonexistent category as a generic 'not found' error, the same pattern already used for account ownership checks.
+- **Where:** `src/application/use-cases/CreateTransactionUseCase.ts, CreateRecurringRuleUseCase.ts, SetBudgetUseCase.ts.`
+
+### Category uniqueness is enforced with `@@unique([userId, name])`, mirroring the same…
+Category uniqueness is enforced with `@@unique([userId, name])`, mirroring the same per-owner uniqueness pattern used elsewhere in the project (e.g. account/user uniqueness) rather than a global unique name.
+- **Where:** `prisma/schema.prisma Category model.`
 
 ### RecurringRule ownership/authorization is checked via its account relation (account_id →…
 RecurringRule ownership/authorization is checked via its account relation (account_id → account.user), the same not-found-error pattern used for transactions, rather than storing a direct user/tenant id on the rule.
@@ -191,36 +191,34 @@ Extracted a shared `transactionMapper` (application/mappers/transactionMapper.ts
 Domain `Account` entity exposes state transitions only through dedicated mutator methods — `rename()`, `changeType()`, `archive()` — rather than public setters, so each mutation can protect its own invariants at the entity boundary.
 - **Where:** `src/domain/entities/Account.ts, used by UpdateAccountUseCase and ArchiveAccountUseCase.`
 
-### Prisma schema stores all monetary fields as `Int` cents columns (e.g. balance_cents,…
-Prisma schema stores all monetary fields as `Int` cents columns (e.g. balance_cents, amount_cents), never Decimal/Float; DTOs mirror this with explicit `*Cents` field names (balanceCents, amountCents) instead of generic amount/balance, and zod validation schemas enforce `.int()` on them.
-- **Where:** `prisma/schema.prisma, src/application/dtos/*.ts, src/interfaces/validation/*Schemas.ts.`
-
-### BcryptPasswordHasher uses 10 salt rounds
-BcryptPasswordHasher uses 10 salt rounds; JwtTokenService issues tokens with 1-day expiry
-- **Why:** baseline security defaults chosen for this project's auth (B2 milestone).
-- **Where:** `src/infrastructure/security/BcryptPasswordHasher.ts, JwtTokenService.ts`
-
-### prisma/seed.ts is idempotent by using deterministic ids plus upserts.
-- **Learned:** verified by running `npm run prisma:seed` twice in a row and confirming row counts stayed fixed (5 categories / 2 accounts / 4 transactions) rather than duplicating.
-
-### Auth routes use 201 on successful register, 409 on duplicate email, 200 on successful…
-Auth routes use 201 on successful register, 409 on duplicate email, 200 on successful login, 401 on any login failure (unknown email or wrong password alike)
-- **Why:** consistent with the uniform error-contract status mapping and with LoginUserUseCase's identical-error-message rule for unknown-user vs wrong-password.
-- **Where:** `src/app/api/auth/register/route.ts, src/app/api/auth/login/route.ts`
+### Transaction entity now enforces a positive-amount invariant
+Transaction entity now enforces a positive-amount invariant — `Transaction.create()`/`reconstitute()` throws if the amount is not positive — in addition to the new optional `categoryId`.
+- **Where:** `src/domain/entities/Transaction.ts.`
 
 ### Money value object stores only integer cents
 Money value object stores only integer cents; constructor is private and callers must use `Money.fromCents(cents)` (plus `Money.zero()`), which throws via `Number.isSafeInteger` on floats, NaN, and Infinity.
 - **Learned:** verified with a 13-check smoke test (Money.fromCents(10.5), NaN, Infinity all throw).
 - **Where:** `src/domain/value-objects/Money.ts.`
 
-### Transaction entity now enforces a positive-amount invariant
-Transaction entity now enforces a positive-amount invariant — `Transaction.create()`/`reconstitute()` throws if the amount is not positive — in addition to the new optional `categoryId`.
-- **Where:** `src/domain/entities/Transaction.ts.`
+### When a resource (account/transaction) doesn't belong to the requesting user, use cases…
+When a resource (account/transaction) doesn't belong to the requesting user, use cases return "Account not found" rather than a 403/forbidden
+- **Why:** avoids leaking the existence of other users' resources
+- **Learned:** cross-tenant/cross-user access checks should look identical to a genuine not-found case.
+- **Where:** `CreateTransactionUseCase, GetTransactionsUseCase`
+
+### Prisma schema stores all monetary fields as `Int` cents columns (e.g. balance_cents,…
+Prisma schema stores all monetary fields as `Int` cents columns (e.g. balance_cents, amount_cents), never Decimal/Float; DTOs mirror this with explicit `*Cents` field names (balanceCents, amountCents) instead of generic amount/balance, and zod validation schemas enforce `.int()` on them.
+- **Where:** `prisma/schema.prisma, src/application/dtos/*.ts, src/interfaces/validation/*Schemas.ts.`
 
 ### Before declaring an auth/authorization feature complete, verification is done by starting…
 Before declaring an auth/authorization feature complete, verification is done by starting the real dev server and running a curl-based e2e script that checks token issuance, spoofed-userId rejection, missing/garbage-token 401s, and cross-user data isolation, then deleting the seeded test users (email LIKE '%@test.dev') afterward
 - **Why:** type-check/lint alone don't prove authorization boundaries actually hold at runtime; test data must not pollute the dev database afterward.
 - **Where:** `scratchpad/auth-e2e.sh, cleanup via `DELETE FROM users WHERE email LIKE '%@test.dev'``
+
+### New entities (User) follow the same private-constructor + create()/reconstitute() factory…
+New entities (User) follow the same private-constructor + create()/reconstitute() factory pattern as existing domain entities, performing validation and normalization (lowercasing email, checking format/length) inside the factory rather than at the call site
+- **Why:** keeps invariant enforcement centralized in the entity regardless of whether it's being freshly created or rehydrated from persistence.
+- **Where:** `src/domain/entities/User.ts`
 
 ### RegisterUserUseCase looks up the email in IUserRepository first and returns a…
 RegisterUserUseCase looks up the email in IUserRepository first and returns a duplicate/409 error before hashing the password or saving
@@ -231,10 +229,13 @@ RegisterUserUseCase looks up the email in IUserRepository first and returns a du
 Domain entities (Account, Transaction, Category) use a private constructor plus two static factories: `create()` for brand-new entities (sets timestamps/defaults) and `reconstitute()` for rehydrating from persistence.
 - **Where:** `src/domain/entities/{Account,Transaction,Category}.ts.`
 
-### New entities (User) follow the same private-constructor + create()/reconstitute() factory…
-New entities (User) follow the same private-constructor + create()/reconstitute() factory pattern as existing domain entities, performing validation and normalization (lowercasing email, checking format/length) inside the factory rather than at the call site
-- **Why:** keeps invariant enforcement centralized in the entity regardless of whether it's being freshly created or rehydrated from persistence.
-- **Where:** `src/domain/entities/User.ts`
+### Auth routes use 201 on successful register, 409 on duplicate email, 200 on successful…
+Auth routes use 201 on successful register, 409 on duplicate email, 200 on successful login, 401 on any login failure (unknown email or wrong password alike)
+- **Why:** consistent with the uniform error-contract status mapping and with LoginUserUseCase's identical-error-message rule for unknown-user vs wrong-password.
+- **Where:** `src/app/api/auth/register/route.ts, src/app/api/auth/login/route.ts`
+
+### prisma/seed.ts is idempotent by using deterministic ids plus upserts.
+- **Learned:** verified by running `npm run prisma:seed` twice in a row and confirming row counts stayed fixed (5 categories / 2 accounts / 4 transactions) rather than duplicating.
 
 ### userId is never accepted from client input (DTOs/body/query) for scoped resources
 userId is never accepted from client input (DTOs/body/query) for scoped resources — it's always the authenticated identity passed as an explicit first argument to use cases
@@ -242,23 +243,22 @@ userId is never accepted from client input (DTOs/body/query) for scoped resource
 - **Learned:** token-derived identity is the single source of truth for ownership; zod schemas must not include userId so a spoofed value in the body is stripped before it reaches the use case.
 - **Where:** `CreateAccountDTO (userId field removed), CreateAccountUseCase, CreateTransactionUseCase, GetTransactionsUseCase, authenticateRequest() in src/interfaces/auth/authenticateRequest.ts`
 
-### When a resource (account/transaction) doesn't belong to the requesting user, use cases…
-When a resource (account/transaction) doesn't belong to the requesting user, use cases return "Account not found" rather than a 403/forbidden
-- **Why:** avoids leaking the existence of other users' resources
-- **Learned:** cross-tenant/cross-user access checks should look identical to a genuine not-found case.
-- **Where:** `CreateTransactionUseCase, GetTransactionsUseCase`
+### BcryptPasswordHasher uses 10 salt rounds
+BcryptPasswordHasher uses 10 salt rounds; JwtTokenService issues tokens with 1-day expiry
+- **Why:** baseline security defaults chosen for this project's auth (B2 milestone).
+- **Where:** `src/infrastructure/security/BcryptPasswordHasher.ts, JwtTokenService.ts`
 
 ## decision · 9
-
-### Transactions store both the original amount/currency and a…
-Transactions store both the original amount/currency and a base_amount_cents/base_currency snapshot converted at posting time
-- **Why:** so budget/report aggregates never need to re-convert or depend on historical exchange rates changing
-- **Where:** `prisma/schema.prisma Transaction model, src/domain/entities/Transaction.ts, src/application/services/BaseCurrencyConverter.ts`
 
 ### Money.convertTo(currency, rate) rounds to the nearest cent and guards against…
 Money.convertTo(currency, rate) rounds to the nearest cent and guards against non-positive rates
 - **Why:** keeps currency conversion centralized in the value object with consistent rounding/validation rather than scattered in use cases
 - **Where:** `src/domain/value-objects/Money.ts`
+
+### Transactions store both the original amount/currency and a…
+Transactions store both the original amount/currency and a base_amount_cents/base_currency snapshot converted at posting time
+- **Why:** so budget/report aggregates never need to re-convert or depend on historical exchange rates changing
+- **Where:** `prisma/schema.prisma Transaction model, src/domain/entities/Transaction.ts, src/application/services/BaseCurrencyConverter.ts`
 
 ### Recurring-transaction materialization idempotency is enforced by a DB-level unique…
 Recurring-transaction materialization idempotency is enforced by a DB-level unique constraint on transactions(recurring_rule_id, date) rather than an application check-then-insert.
@@ -322,10 +322,6 @@ The spent-per-category aggregate enforces ownership through the account→user r
 - **Why:** prevents another user's transactions in the same category from leaking into a budget's spent total.
 - **Where:** `PrismaTransactionRepository.sumExpensesByCategory.`
 
-### Transaction creation requires a `currency` field in the request body
-Transaction creation requires a `currency` field in the request body; omitting it fails Zod validation with 'Required' rather than any balance-calculation bug.
-- **Learned:** when an e2e balance check fails, first check whether the transaction POSTs actually succeeded (e.g. missing required fields) before suspecting the derivation logic.
-
 ### Next.js dev server auto-increments the port when the default (3000) is busy, silently…
 Next.js dev server auto-increments the port when the default (3000) is busy, silently trying 3001, 3002, ... up to 3006 in this session before binding.
 - **Learned:** e2e scripts/tools must detect the actual bound port from the dev server's own startup output rather than hardcoding localhost:3000, or requests will hit the wrong (or no) server.
@@ -347,9 +343,9 @@ AccountController's generic 'Failed to …:' error-message wrapping was swallowi
 - **Learned:** don't wrap/prefix use-case error messages in controllers — let them propagate as-is for status mapping.
 - **Where:** `src/interfaces/controllers/AccountController.ts.`
 
-### Several project docs (README.md, QUICKSTART.md, docs/EXAMPLES.md, CHECKLIST.md,…
-Several project docs (README.md, QUICKSTART.md, docs/EXAMPLES.md, CHECKLIST.md, PROJECT_SUMMARY.md) still referenced the old `npm run db:migrate` script from the pg-based setup after the Prisma migration; they were bulk sed-updated to `npm run prisma:migrate`.
-- **Learned:** when replacing an infra script/tool (e.g. pg → Prisma), grep the docs tree for the old script name, not just source code, or stale instructions will point users at removed commands.
+### Transaction creation requires a `currency` field in the request body
+Transaction creation requires a `currency` field in the request body; omitting it fails Zod validation with 'Required' rather than any balance-calculation bug.
+- **Learned:** when an e2e balance check fails, first check whether the transaction POSTs actually succeeded (e.g. missing required fields) before suspecting the derivation logic.
 
 ### Adding a required (non-nullable) FK column to an existing populated table…
 Adding a required (non-nullable) FK column to an existing populated table (Account.userId) forced truncating the accounts/transactions tables before running `prisma migrate dev --name add_users`
@@ -357,22 +353,9 @@ Adding a required (non-nullable) FK column to an existing populated table (Accou
 - **Learned:** when a migration adds a required FK to a table with existing data, either backfill/assign a default first or clear the table — Prisma migrate dev will not silently handle orphaned rows.
 - **Where:** `prisma/schema.prisma, executed via `psql ... TRUNCATE transactions, accounts` immediately before `npx prisma migrate dev``
 
-### src/app/api/health/route.ts imported the infrastructure `DatabaseClient` (pg pool)…
-src/app/api/health/route.ts imported the infrastructure `DatabaseClient` (pg pool) directly instead of going through the DI container/repository ports, bypassing clean-architecture layering; this only surfaced as a stale-import error from `npm run type-check` after the pg→Prisma swap, not from reviewing the DI container or repositories.
-- **Why:** route handlers can reach into infrastructure directly since Next.js doesn't enforce layer boundaries.
-- **Learned:** when swapping persistence tech, run type-check and grep app/api routes for direct infrastructure imports — don't assume the DI container is the only place old classes are referenced.
-
-### Domain services (not just entities) directly instantiate value objects
-Domain services (not just entities) directly instantiate value objects — `TransactionService` called `new Money(0)` — so when Money's constructor was made private in favor of `Money.fromCents()`, this call site needed a manual fix alongside the entity rewrites.
-- **Why:** it wasn't caught by grepping entities alone; found only when editing the domain layer broadly.
-- **Learned:** when changing a value object's public API, grep all of src/domain/ (services included) for direct constructor usage, not just the entities that own it.
-- **Where:** `src/domain/services/TransactionService.ts.`
-
-### This dev machine already runs a native Postgres on localhost:5432, and other local Docker…
-This dev machine already runs a native Postgres on localhost:5432, and other local Docker projects occupy 5433/5434, so the ledger project's dockerized `ledger-postgres` container must be remapped to a free host port.
-- **Why:** `docker compose up` on 5432/5433 failed (P1010 access denied / port-binding error) because those ports were already owned by unrelated Postgres instances.
-- **Learned:** when Prisma/Postgres connections fail locally, check `lsof -nP -iTCP -sTCP:LISTEN` for port conflicts before assuming a config or auth bug.
-- **Where:** `a gitignored docker-compose.override.yml maps the container to host port 5439, with .env's DATABASE_URL pointing at 5439; committed docker-compose.yml and .env.example keep the default 5432.`
+### Several project docs (README.md, QUICKSTART.md, docs/EXAMPLES.md, CHECKLIST.md,…
+Several project docs (README.md, QUICKSTART.md, docs/EXAMPLES.md, CHECKLIST.md, PROJECT_SUMMARY.md) still referenced the old `npm run db:migrate` script from the pg-based setup after the Prisma migration; they were bulk sed-updated to `npm run prisma:migrate`.
+- **Learned:** when replacing an infra script/tool (e.g. pg → Prisma), grep the docs tree for the old script name, not just source code, or stale instructions will point users at removed commands.
 
 ### prisma/seed.ts computes the password hash only inside the user-create branch, not…
 prisma/seed.ts computes the password hash only inside the user-create branch, not unconditionally
@@ -385,3 +368,20 @@ Write tool errors with "File has not been read yet" when overwriting an existing
 - **Why:** safety guard against blind overwrites
 - **Learned:** Read (even a small `limit`) an existing file immediately before Write-overwriting it, even if you authored its prior version in the same session but it wasn't the last thing read.
 - **Where:** `encountered on AccountController.ts and TransactionController.ts during B2 rewrite`
+
+### Domain services (not just entities) directly instantiate value objects
+Domain services (not just entities) directly instantiate value objects — `TransactionService` called `new Money(0)` — so when Money's constructor was made private in favor of `Money.fromCents()`, this call site needed a manual fix alongside the entity rewrites.
+- **Why:** it wasn't caught by grepping entities alone; found only when editing the domain layer broadly.
+- **Learned:** when changing a value object's public API, grep all of src/domain/ (services included) for direct constructor usage, not just the entities that own it.
+- **Where:** `src/domain/services/TransactionService.ts.`
+
+### src/app/api/health/route.ts imported the infrastructure `DatabaseClient` (pg pool)…
+src/app/api/health/route.ts imported the infrastructure `DatabaseClient` (pg pool) directly instead of going through the DI container/repository ports, bypassing clean-architecture layering; this only surfaced as a stale-import error from `npm run type-check` after the pg→Prisma swap, not from reviewing the DI container or repositories.
+- **Why:** route handlers can reach into infrastructure directly since Next.js doesn't enforce layer boundaries.
+- **Learned:** when swapping persistence tech, run type-check and grep app/api routes for direct infrastructure imports — don't assume the DI container is the only place old classes are referenced.
+
+### This dev machine already runs a native Postgres on localhost:5432, and other local Docker…
+This dev machine already runs a native Postgres on localhost:5432, and other local Docker projects occupy 5433/5434, so the ledger project's dockerized `ledger-postgres` container must be remapped to a free host port.
+- **Why:** `docker compose up` on 5432/5433 failed (P1010 access denied / port-binding error) because those ports were already owned by unrelated Postgres instances.
+- **Learned:** when Prisma/Postgres connections fail locally, check `lsof -nP -iTCP -sTCP:LISTEN` for port conflicts before assuming a config or auth bug.
+- **Where:** `a gitignored docker-compose.override.yml maps the container to host port 5439, with .env's DATABASE_URL pointing at 5439; committed docker-compose.yml and .env.example keep the default 5432.`
