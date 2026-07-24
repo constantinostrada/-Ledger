@@ -1,6 +1,19 @@
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <main style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <nav style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <Link href="/login" className="button-secondary">
+          Log in
+        </Link>
+        <Link href="/register" className="button-primary">
+          Register
+        </Link>
+        <Link href="/dashboard" className="button-secondary">
+          Dashboard
+        </Link>
+      </nav>
       <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
         Welcome to Ledger
       </h1>
