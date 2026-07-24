@@ -62,27 +62,11 @@ JwtTokenService requires the JWT secret to be passed at construction time (fails
 - **Learned:** prefer constructor-time validation of required secrets over per-call checks.
 - **Where:** `src/infrastructure/security/JwtTokenService.ts, wired in src/interfaces/di/container.ts, JWT_SECRET in .env/.env.example`
 
-## business-rule · 11
-
-### Account listing excludes archived accounts by default.
-- **Where:** `accounts list endpoint / GetAccountsUseCase (verified while writing docs/API.md).`
+## business-rule · 7
 
 ### CreateTransactionUseCase validates that a linked category exists and is owned by the…
 CreateTransactionUseCase validates that a linked category exists and is owned by the user, but does NOT check that the category's 'kind' matches the transaction type (income/expense).
 - **Learned:** an earlier draft of docs/API.md incorrectly claimed this cross-check existed; verify use-case behavior directly rather than assuming from field names.
-
-### GetIncomeVsExpenseReportUseCase rejects month ranges wider than MAX_MONTHS = 120.
-- **Where:** `src/application/use-cases/GetIncomeVsExpenseReportUseCase.ts:12`
-
-### Recurring rule sweeps are idempotent because materialized transactions are constrained by…
-Recurring rule sweeps are idempotent because materialized transactions are constrained by a DB unique index on (rule, date); re-running a sweep reports createdCount: 0 and a raw duplicate insert throws Prisma P2002 rather than creating a duplicate.
-- **Why:** the idempotency guarantee lives at the DB layer, not just in application logic.
-- **Where:** `prisma/schema.prisma, recurring-rules sweep route/use case`
-
-### Any userId supplied in a request body is ignored
-Any userId supplied in a request body is ignored — the authenticated user's identity for all reads/writes comes only from the Bearer token via authenticateRequest.
-- **Why:** prevents identity spoofing/smuggling through payloads.
-- **Where:** `src/interfaces/auth/authenticateRequest.ts`
 
 ### Cross-user access to another user's resources (accounts, transactions, categories,…
 Cross-user access to another user's resources (accounts, transactions, categories, budgets, recurring rules) always returns 404, never 403.
@@ -260,7 +244,7 @@ Replaced the boilerplate's raw `pg` Postgres driver stack (connection pool, hand
 - **Why:** B1 acceptance criteria explicitly required a Prisma schema, migration, and `npm run prisma:seed`; pg and @types/pg were uninstalled.
 - **Where:** `prisma/schema.prisma, src/infrastructure/database/prisma.ts, src/infrastructure/repositories/Prisma{Account,Transaction,Category}Repository.ts.`
 
-## gotcha · 11
+## gotcha · 10
 
 ### Route handler modules construct the DI container (and its Prisma connection) at import…
 Route handler modules construct the DI container (and its Prisma connection) at import time, so integration tests must load environment variables (setupFiles) before any route module is imported — otherwise the container initializes against a missing/wrong DATABASE_URL.
@@ -297,12 +281,6 @@ Domain services (not just entities) directly instantiate value objects — `Tran
 - **Why:** it wasn't caught by grepping entities alone; found only when editing the domain layer broadly.
 - **Learned:** when changing a value object's public API, grep all of src/domain/ (services included) for direct constructor usage, not just the entities that own it.
 - **Where:** `src/domain/services/TransactionService.ts.`
-
-### This dev machine already runs a native Postgres on localhost:5432, and other local Docker…
-This dev machine already runs a native Postgres on localhost:5432, and other local Docker projects occupy 5433/5434, so the ledger project's dockerized `ledger-postgres` container must be remapped to a free host port.
-- **Why:** `docker compose up` on 5432/5433 failed (P1010 access denied / port-binding error) because those ports were already owned by unrelated Postgres instances.
-- **Learned:** when Prisma/Postgres connections fail locally, check `lsof -nP -iTCP -sTCP:LISTEN` for port conflicts before assuming a config or auth bug.
-- **Where:** `a gitignored docker-compose.override.yml maps the container to host port 5439, with .env's DATABASE_URL pointing at 5439; committed docker-compose.yml and .env.example keep the default 5432.`
 
 ### prisma/seed.ts computes the password hash only inside the user-create branch, not…
 prisma/seed.ts computes the password hash only inside the user-create branch, not unconditionally
