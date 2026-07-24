@@ -1,8 +1,9 @@
-# business-rule · 7
+# business-rule · 8
 
 > Section index — this project's **business-rule** memory. Open a concept below for the full detail.
 
 - [[business-rule/a-category-s-kind-income-expense-is-immutable-af]] — A Category's `kind` (INCOME/EXPENSE) is immutable after creation
+- [[business-rule/any-authenticated-api-call-that-comes-back-401-e]] — Any authenticated API call that comes back 401 (e.g. a stale/expired stored JWT) clears…
 - [[business-rule/createtransactionusecase-validates-that-a-linked]] — CreateTransactionUseCase validates that a linked category exists and is owned by the…
 - [[business-rule/cross-user-access-to-another-user-s-resources-ac]] — Cross-user access to another user's resources (accounts, transactions, categories,…
 - [[business-rule/exceeding-a-budget-is-only-flagged-never-blocked]] — Exceeding a budget is only flagged, never blocked

@@ -1,4 +1,4 @@
-# gotcha · 10
+# gotcha · 9
 
 > Section index — this project's **gotcha** memory. Open a concept below for the full detail.
 
@@ -7,7 +7,6 @@
 - [[gotcha/domain-services-not-just-entities-directly-insta]] — Domain services (not just entities) directly instantiate value objects
 - [[gotcha/next-js-dev-server-auto-increments-the-port-when]] — Next.js dev server auto-increments the port when the default (3000) is busy, silently…
 - [[gotcha/prisma-migrate-dev-interactive-prompts-block-non]] — Prisma migrate dev interactive prompts block non-interactive sessions
-- [[gotcha/prisma-seed-ts-computes-the-password-hash-only-i]] — prisma/seed.ts computes the password hash only inside the user-create branch, not…
 - [[gotcha/route-handler-modules-construct-the-di-container]] — Route handler modules construct the DI container (and its Prisma connection) at import…
 - [[gotcha/src-app-api-health-route-ts-imported-the-infrast]] — src/app/api/health/route.ts imported the infrastructure `DatabaseClient` (pg pool)…
 - [[gotcha/transaction-creation-requires-a-currency-field-i]] — Transaction creation requires a `currency` field in the request body
