@@ -2,6 +2,8 @@ import type { RegisterUserDTO } from '@application/dtos/RegisterUserDTO';
 import type { LoginUserDTO } from '@application/dtos/LoginUserDTO';
 import type { AuthResultDTO } from '@application/dtos/AuthResultDTO';
 import type { AccountDTO } from '@application/dtos/AccountDTO';
+import type { CreateAccountDTO } from '@application/dtos/CreateAccountDTO';
+import type { NetWorthReportDTO } from '@application/dtos/NetWorthReportDTO';
 
 export class ApiError extends Error {
   constructor(
@@ -29,6 +31,20 @@ export class ApiClient {
   getAccounts(includeArchived = false): Promise<AccountDTO[]> {
     const query = includeArchived ? '?includeArchived=true' : '';
     return this.request('GET', `/api/accounts${query}`);
+  }
+
+  createAccount(data: CreateAccountDTO): Promise<AccountDTO> {
+    return this.request('POST', '/api/accounts', data);
+  }
+
+  // Archive is a soft delete: the account keeps its transaction history
+  // and disappears from the default list.
+  archiveAccount(accountId: string): Promise<AccountDTO> {
+    return this.request('DELETE', `/api/accounts/${accountId}`);
+  }
+
+  getNetWorthReport(): Promise<NetWorthReportDTO> {
+    return this.request('GET', '/api/reports/net-worth');
   }
 
   private async request<T>(
