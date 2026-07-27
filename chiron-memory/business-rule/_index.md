@@ -1,4 +1,4 @@
-# business-rule · 11
+# business-rule · 12
 
 > Section index — this project's **business-rule** memory. Open a concept below for the full detail.
 
@@ -13,3 +13,4 @@
 - [[business-rule/net-worth-report-includes-archived-accounts-in-t]] — Net worth report includes archived accounts in the total, not just active ones
 - [[business-rule/recurrenceinterval-monthly-stepping-preserves-th]] — RecurrenceInterval MONTHLY stepping preserves the original start day-of-month and clamps…
 - [[business-rule/the-income-vs-expense-report-rejects-inverted-da]] — The income-vs-expense report rejects inverted date ranges (from after to) and ranges…
+- [[business-rule/there-is-no-endpoint-to-list-all-budgets-across]] — There is no endpoint to list all budgets across months
