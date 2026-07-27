@@ -4,9 +4,9 @@ This folder holds the project's canonical decisions, architecture and convention
 
 ## Sections
 - [[architecture/_index]] · 16
-- [[business-rule/_index]] · 10
-- [[config/_index]] · 3
+- [[business-rule/_index]] · 11
+- [[config/_index]] · 4
 - [[contradiction/_index]] · 1
-- [[convention/_index]] · 38
-- [[decision/_index]] · 6
-- [[gotcha/_index]] · 10
+- [[convention/_index]] · 40
+- [[decision/_index]] · 8
+- [[gotcha/_index]] · 11

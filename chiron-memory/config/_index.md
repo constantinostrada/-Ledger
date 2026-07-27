@@ -1,7 +1,8 @@
-# config · 3
+# config · 4
 
 > Section index — this project's **config** memory. Open a concept below for the full detail.
 
+- [[config/local-dev-has-a-seeded-demo-user-demo-ledger-dev]] — Local dev has a seeded demo user (demo@ledger.dev / Demo1234!) defined in prisma/seed.ts…
 - [[config/local-manual-live-verification-of-the-app-runs-t]] — Local manual/live verification of the app runs the Next.js dev server on port 3010…
 - [[config/the-ledger-project-had-no-test-framework-before]] — The ledger project had no test framework before this work
 - [[config/the-project-s-local-dev-postgres-runs-in-a-docke]] — The project's local dev Postgres runs in a docker-compose service named…

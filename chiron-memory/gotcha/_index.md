@@ -1,4 +1,4 @@
-# gotcha · 10
+# gotcha · 11
 
 > Section index — this project's **gotcha** memory. Open a concept below for the full detail.
 
@@ -9,6 +9,7 @@
 - [[gotcha/prisma-migrate-dev-interactive-prompts-block-non]] — Prisma migrate dev interactive prompts block non-interactive sessions
 - [[gotcha/route-handler-modules-construct-the-di-container]] — Route handler modules construct the DI container (and its Prisma connection) at import…
 - [[gotcha/src-app-api-health-route-ts-imported-the-infrast]] — src/app/api/health/route.ts imported the infrastructure `DatabaseClient` (pg pool)…
+- [[gotcha/the-report-chart-s-hover-tooltip-is-positioned-v]] — The report chart's hover tooltip is positioned via percentages relative to its wrapper…
 - [[gotcha/there-is-no-single-shared-test-double-for-itrans]] — There is no single shared test double for ITransactionRepository
 - [[gotcha/transaction-creation-requires-a-currency-field-i]] — Transaction creation requires a `currency` field in the request body
 - [[gotcha/write-tool-errors-with-file-has-not-been-read-ye]] — Write tool errors with "File has not been read yet" when overwriting an existing file…
