@@ -33,6 +33,7 @@ export default function AuthenticatedLayout({
           <nav className="app-nav">
             <Link href="/dashboard">Dashboard</Link>
             <Link href="/transactions">Transactions</Link>
+            <Link href="/budgets">Budgets</Link>
           </nav>
         </div>
         <div className="app-header-user">

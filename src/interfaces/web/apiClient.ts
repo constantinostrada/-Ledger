@@ -9,6 +9,8 @@ import type { TransactionDTO } from '@application/dtos/TransactionDTO';
 import type { CreateTransactionDTO } from '@application/dtos/CreateTransactionDTO';
 import type { UpdateTransactionDTO } from '@application/dtos/UpdateTransactionDTO';
 import type { GetTransactionsDTO } from '@application/dtos/GetTransactionsDTO';
+import type { BudgetDTO } from '@application/dtos/BudgetDTO';
+import type { SetBudgetDTO } from '@application/dtos/SetBudgetDTO';
 
 export class ApiError extends Error {
   constructor(
@@ -85,6 +87,17 @@ export class ApiClient {
   // balance and every report adjust immediately.
   deleteTransaction(transactionId: string): Promise<void> {
     return this.request('DELETE', `/api/transactions/${transactionId}`);
+  }
+
+  getBudgets(period: string): Promise<BudgetDTO[]> {
+    const query = new URLSearchParams({ period });
+    return this.request('GET', `/api/budgets?${query.toString()}`);
+  }
+
+  // Setting a budget is an idempotent upsert (one limit per category +
+  // month), hence PUT rather than POST.
+  setBudget(data: SetBudgetDTO): Promise<BudgetDTO> {
+    return this.request('PUT', '/api/budgets', data);
   }
 
   private async request<T>(
