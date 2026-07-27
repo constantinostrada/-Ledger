@@ -1,7 +1,8 @@
-# architecture · 15
+# architecture · 16
 
 > Section index — this project's **architecture** memory. Open a concept below for the full detail.
 
+- [[architecture/account-archiving-model-soft-delete-with-selecti]] — Account archiving model
 - [[architecture/account-balances-are-always-derived-from-transac]] — Account balances are always derived from transaction history rather than stored as a…
 - [[architecture/account-now-has-a-required-fk-to-user-account-us]] — Account now has a required FK to User (Account.userId) with cascade delete, migrated via…
 - [[architecture/an-iexchangerateprovider-port-plus-a-basecurrenc]] — An IExchangeRateProvider port plus a BaseCurrencyConverter application service is shared…
