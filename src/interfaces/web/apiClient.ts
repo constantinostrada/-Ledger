@@ -11,6 +11,10 @@ import type { UpdateTransactionDTO } from '@application/dtos/UpdateTransactionDT
 import type { GetTransactionsDTO } from '@application/dtos/GetTransactionsDTO';
 import type { BudgetDTO } from '@application/dtos/BudgetDTO';
 import type { SetBudgetDTO } from '@application/dtos/SetBudgetDTO';
+import type { GetSpendByCategoryReportDTO } from '@application/dtos/GetSpendByCategoryReportDTO';
+import type { SpendByCategoryReportDTO } from '@application/dtos/SpendByCategoryReportDTO';
+import type { GetIncomeVsExpenseReportDTO } from '@application/dtos/GetIncomeVsExpenseReportDTO';
+import type { IncomeVsExpenseReportDTO } from '@application/dtos/IncomeVsExpenseReportDTO';
 
 export class ApiError extends Error {
   constructor(
@@ -98,6 +102,20 @@ export class ApiClient {
   // month), hence PUT rather than POST.
   setBudget(data: SetBudgetDTO): Promise<BudgetDTO> {
     return this.request('PUT', '/api/budgets', data);
+  }
+
+  getSpendByCategoryReport(
+    params: GetSpendByCategoryReportDTO
+  ): Promise<SpendByCategoryReportDTO> {
+    const query = new URLSearchParams({ period: params.period });
+    return this.request('GET', `/api/reports/spend-by-category?${query}`);
+  }
+
+  getIncomeVsExpenseReport(
+    params: GetIncomeVsExpenseReportDTO
+  ): Promise<IncomeVsExpenseReportDTO> {
+    const query = new URLSearchParams({ from: params.from, to: params.to });
+    return this.request('GET', `/api/reports/income-vs-expense?${query}`);
   }
 
   private async request<T>(

@@ -499,3 +499,198 @@ a {
   display: flex;
   justify-content: flex-end;
 }
+
+/* --- Reports --- */
+.report-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+/* Refetch keeps the previous render on screen, just dimmed — no
+   skeleton flash or layout jump while the new slice loads. */
+.report-refetching {
+  opacity: 0.55;
+}
+
+.report-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.report-headline-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.report-headline-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.report-empty {
+  color: #666;
+}
+
+.spend-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  list-style: none;
+}
+
+.spend-bar-row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 11rem) 1fr max-content;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.spend-bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spend-bar-track {
+  display: block;
+}
+
+.spend-bar-fill {
+  display: block;
+  height: 14px;
+  min-width: 2px;
+  background-color: #2a78d6;
+  border-radius: 0 4px 4px 0;
+}
+
+.spend-bar-value {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.spend-bar-share {
+  margin-left: 0.5rem;
+  font-weight: 400;
+  color: #666;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.85rem;
+  color: #52514e;
+}
+
+.chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chart-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.chart-plot-wrap {
+  position: relative;
+}
+
+.chart-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-gridline {
+  stroke: #eee;
+  stroke-width: 1;
+}
+
+.chart-baseline {
+  stroke: #ccc;
+  stroke-width: 1;
+}
+
+.chart-tick-label {
+  font-size: 11px;
+  fill: #898781;
+}
+
+.chart-group path {
+  transition: filter 0.1s ease;
+}
+
+.chart-group-active path {
+  filter: brightness(1.12);
+}
+
+.chart-group rect:focus {
+  outline: none;
+  stroke: #0967d2;
+  stroke-width: 2;
+}
+
+.chart-tooltip {
+  position: absolute;
+  top: 0;
+  transform: translate(-50%, -0.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-size: 0.85rem;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.chart-tooltip-title {
+  font-weight: 600;
+}
+
+.chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chart-tooltip-key {
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.chart-tooltip-key-net {
+  background-color: #898781;
+}
+
+.chart-tooltip-series {
+  color: #666;
+}
+
+.report-table-details summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.report-table-details[open] summary {
+  margin-bottom: 0.75rem;
+}

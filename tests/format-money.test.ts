@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatMoney } from '@interfaces/web/formatMoney';
+import { formatMoney, formatMoneyWhole } from '@interfaces/web/formatMoney';
 
 describe('formatMoney', () => {
   it('renders integer cents as a currency string', () => {
@@ -20,5 +20,15 @@ describe('formatMoney', () => {
 
   it('keeps sub-dollar amounts as cents', () => {
     expect(formatMoney(7, 'USD')).toBe('$0.07');
+  });
+});
+
+describe('formatMoneyWhole', () => {
+  it('drops fraction digits for round axis-tick values', () => {
+    expect(formatMoneyWhole(200000, 'USD')).toBe('$2,000');
+  });
+
+  it('respects the currency argument', () => {
+    expect(formatMoneyWhole(500000, 'EUR')).toBe('€5,000');
   });
 });
