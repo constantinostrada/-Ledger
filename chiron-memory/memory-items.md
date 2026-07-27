@@ -73,7 +73,23 @@ JwtTokenService requires the JWT secret to be passed at construction time (fails
 - **Learned:** prefer constructor-time validation of required secrets over per-call checks.
 - **Where:** `src/infrastructure/security/JwtTokenService.ts, wired in src/interfaces/di/container.ts, JWT_SECRET in .env/.env.example`
 
-## business-rule · 8
+## business-rule · 11
+
+### Archived accounts remain visible in transaction row lookups and filter dropdowns (so…
+Archived accounts remain visible in transaction row lookups and filter dropdowns (so historical transactions still display correctly) but are excluded from the account picker in the add/edit form, unless the transaction currently being edited already belongs to that archived account.
+- **Why:** preserves legibility of historic data while preventing new transactions from being posted to archived accounts.
+- **Where:** `src/app/(authenticated)/transactions/page.tsx.`
+
+### Editing a transaction re-derives its base-currency snapshot (baseAmountCents) via…
+Editing a transaction re-derives its base-currency snapshot (baseAmountCents) via BaseCurrencyConverter at edit time, using the same conversion path as original posting, rather than preserving the value from creation.
+- **Why:** keeps the base-currency amount consistent with current conversion logic instead of going stale after an edit.
+- **Where:** `src/application/use-cases/UpdateTransactionUseCase.ts.`
+
+### A transaction's currency must always match the currency of the account it posts to,…
+A transaction's currency must always match the currency of the account it posts to, enforced in TransactionService.
+- **Why:** keeps posted amounts unambiguous per account rather than allowing mixed-currency ledgers.
+- **Learned:** transaction add/edit forms must derive currency from the selected account (read-only, shown as a label) instead of letting the user pick it independently.
+- **Where:** `src/domain/services/TransactionService.ts.`
 
 ### Any authenticated API call that comes back 401 (e.g. a stale/expired stored JWT) clears…
 Any authenticated API call that comes back 401 (e.g. a stale/expired stored JWT) clears the client-side session and redirects the user to /login
@@ -126,7 +142,26 @@ The ledger project had no test framework before this work; vitest was added as t
 The pre-existing docs/API.md was stale boilerplate that predated the current auth/money model — it documented no authentication, float-typed amounts, and userId passed in request bodies, none of which match current behavior (Bearer auth, integer cents, token-only identity).
 - **Learned:** it was fully rewritten to cover all 21 endpoints; don't trust older cached copies or summaries of this file.
 
-## convention · 31
+## convention · 35
+
+### Transaction list date-range filters accept date-only (day-level) inputs from the UI and…
+Transaction list date-range filters accept date-only (day-level) inputs from the UI and convert them to UTC day boundaries (start/end of day) at the query edge.
+- **Where:** `src/app/(authenticated)/transactions/page.tsx filter handling → GetTransactionsDTO/TransactionFilter.`
+
+### Converting a user-typed decimal amount to integer cents at the UI edge is done via direct…
+Converting a user-typed decimal amount to integer cents at the UI edge is done via direct string parsing of the decimal (splitting integer/fraction parts), not by multiplying the float by 100.
+- **Why:** float multiplication (e.g. 0.29 * 100) introduces rounding drift; string-based parsing avoids it and rejects zero/negative/>2-decimal inputs at the boundary.
+- **Where:** `src/interfaces/web/moneyInput.ts (parseAmountToCents / centsToAmountInput).`
+
+### DELETE endpoints for domain resources (transactions, matching categories) return 204 No…
+DELETE endpoints for domain resources (transactions, matching categories) return 204 No Content on success.
+- **Learned:** keep new resource-delete routes consistent with this response code rather than 200 with a body.
+- **Where:** `src/app/api/transactions/[id]/route.ts.`
+
+### Transaction update/delete use cases mask both 'not found' and 'belongs to another user'…
+Transaction update/delete use cases mask both 'not found' and 'belongs to another user' cases behind the identical error message/shape ('Transaction not found'), resolving ownership through the transaction's account.
+- **Why:** avoids leaking existence of other users' records via distinguishable error responses.
+- **Where:** `src/application/use-cases/UpdateTransactionUseCase.ts, DeleteTransactionUseCase.ts, TransactionController.ts.`
 
 ### Pure/unit tests for frontend helpers (no DB/integration setup) live at the top level of…
 Pure/unit tests for frontend helpers (no DB/integration setup) live at the top level of tests/ (e.g. tests/format-money.test.ts), separate from tests/integration which requires the shared dev Postgres and global-setup
@@ -295,7 +330,12 @@ Replaced the boilerplate's raw `pg` Postgres driver stack (connection pool, hand
 - **Why:** B1 acceptance criteria explicitly required a Prisma schema, migration, and `npm run prisma:seed`; pg and @types/pg were uninstalled.
 - **Where:** `prisma/schema.prisma, src/infrastructure/database/prisma.ts, src/infrastructure/repositories/Prisma{Account,Transaction,Category}Repository.ts.`
 
-## gotcha · 9
+## gotcha · 10
+
+### There is no single shared test double for ITransactionRepository
+There is no single shared test double for ITransactionRepository — separate FakeTransactionRepository/StubTransactionRepository classes are duplicated across recurring-transactions.test.ts, reports.test.ts, and multi-currency.test.ts.
+- **Learned:** adding a new method to ITransactionRepository (e.g. update) requires updating all three fakes individually or tsc fails with 'incorrectly implements interface'.
+- **Where:** `tests/recurring-transactions.test.ts, tests/reports.test.ts, tests/multi-currency.test.ts.`
 
 ### Route handler modules construct the DI container (and its Prisma connection) at import…
 Route handler modules construct the DI container (and its Prisma connection) at import time, so integration tests must load environment variables (setupFiles) before any route module is imported — otherwise the container initializes against a missing/wrong DATABASE_URL.
