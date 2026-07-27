@@ -160,7 +160,7 @@ The ledger project had no test framework before this work; vitest was added as t
 The pre-existing docs/API.md was stale boilerplate that predated the current auth/money model — it documented no authentication, float-typed amounts, and userId passed in request bodies, none of which match current behavior (Bearer auth, integer cents, token-only identity).
 - **Learned:** it was fully rewritten to cover all 21 endpoints; don't trust older cached copies or summaries of this file.
 
-## convention · 40
+## convention · 39
 
 ### apiClient.ts methods added for reports (getSpendByCategoryReport,…
 apiClient.ts methods added for reports (getSpendByCategoryReport, getIncomeVsExpenseReport) are typed only against application-layer DTOs, never domain entities, consistent with the rest of the client
@@ -173,10 +173,6 @@ All cents-to-display currency conversion goes through the shared formatMoney hel
 ### Authenticated pages handle a 401 from the API by automatically logging the user out (via…
 Authenticated pages handle a 401 from the API by automatically logging the user out (via AuthContext) rather than showing an inline error, applied consistently across pages (e.g. transactions, budgets)
 - **Where:** `src/interfaces/web/AuthContext.tsx`
-
-### All money values rendered in the UI go through a single cents→display helper…
-All money values rendered in the UI go through a single cents→display helper (`formatMoney.ts`); division by 100 happens nowhere else in the codebase
-- **Where:** `src/interfaces/web/formatMoney.ts`
 
 ### All user-typed money amounts are converted to integer cents via a single helper…
 All user-typed money amounts are converted to integer cents via a single helper (`parseAmountToCents` in moneyInput.ts) that parses the decimal string directly — never via `value * 100` — to avoid floating-point rounding errors
