@@ -26,9 +26,15 @@ export default function AuthenticatedLayout({
   return (
     <>
       <header className="app-header">
-        <Link href="/dashboard" className="app-brand">
-          Ledger
-        </Link>
+        <div className="app-header-left">
+          <Link href="/dashboard" className="app-brand">
+            Ledger
+          </Link>
+          <nav className="app-nav">
+            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/transactions">Transactions</Link>
+          </nav>
+        </div>
         <div className="app-header-user">
           <span>{user?.name ?? user?.email}</span>
           <button

@@ -91,6 +91,15 @@ class FakeTransactionRepository implements ITransactionRepository {
     this.stored.push(transaction);
   }
 
+  async update(transaction: Transaction): Promise<void> {
+    const index = this.stored.findIndex(
+      (existing) => existing.id === transaction.id
+    );
+    if (index >= 0) {
+      this.stored[index] = transaction;
+    }
+  }
+
   async saveAllIgnoringDuplicates(
     transactions: Transaction[]
   ): Promise<number> {

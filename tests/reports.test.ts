@@ -93,6 +93,8 @@ class StubTransactionRepository implements ITransactionRepository {
 
   async save(): Promise<void> {}
 
+  async update(): Promise<void> {}
+
   async saveAllIgnoringDuplicates(): Promise<number> {
     return 0;
   }

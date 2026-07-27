@@ -4,6 +4,11 @@ import type { AuthResultDTO } from '@application/dtos/AuthResultDTO';
 import type { AccountDTO } from '@application/dtos/AccountDTO';
 import type { CreateAccountDTO } from '@application/dtos/CreateAccountDTO';
 import type { NetWorthReportDTO } from '@application/dtos/NetWorthReportDTO';
+import type { CategoryDTO } from '@application/dtos/CategoryDTO';
+import type { TransactionDTO } from '@application/dtos/TransactionDTO';
+import type { CreateTransactionDTO } from '@application/dtos/CreateTransactionDTO';
+import type { UpdateTransactionDTO } from '@application/dtos/UpdateTransactionDTO';
+import type { GetTransactionsDTO } from '@application/dtos/GetTransactionsDTO';
 
 export class ApiError extends Error {
   constructor(
@@ -47,6 +52,41 @@ export class ApiClient {
     return this.request('GET', '/api/reports/net-worth');
   }
 
+  getCategories(): Promise<CategoryDTO[]> {
+    return this.request('GET', '/api/categories');
+  }
+
+  getTransactions(filters: GetTransactionsDTO = {}): Promise<TransactionDTO[]> {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined) {
+        query.set(key, String(value));
+      }
+    }
+    const qs = query.toString();
+    return this.request(
+      'GET',
+      qs ? `/api/transactions?${qs}` : '/api/transactions'
+    );
+  }
+
+  createTransaction(data: CreateTransactionDTO): Promise<TransactionDTO> {
+    return this.request('POST', '/api/transactions', data);
+  }
+
+  updateTransaction(
+    transactionId: string,
+    data: UpdateTransactionDTO
+  ): Promise<TransactionDTO> {
+    return this.request('PATCH', `/api/transactions/${transactionId}`, data);
+  }
+
+  // A hard delete: balances are derived from the ledger, so the account
+  // balance and every report adjust immediately.
+  deleteTransaction(transactionId: string): Promise<void> {
+    return this.request('DELETE', `/api/transactions/${transactionId}`);
+  }
+
   private async request<T>(
     method: string,
     path: string,
@@ -83,6 +123,10 @@ export class ApiClient {
         // Non-JSON error body; keep the generic message.
       }
       throw new ApiError(response.status, message);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return (await response.json()) as T;

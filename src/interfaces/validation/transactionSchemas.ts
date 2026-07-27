@@ -13,6 +13,29 @@ export const createTransactionSchema = z.object({
   date: z.string().datetime('Invalid date format'),
 });
 
+// All fields optional: only the provided ones change. categoryId accepts
+// null to clear the category; recurringRuleId is never editable.
+export const updateTransactionSchema = z
+  .object({
+    accountId: z.string().min(1).optional(),
+    categoryId: z.string().min(1).nullable().optional(),
+    amountCents: z
+      .number()
+      .int('Amount must be integer cents')
+      .positive('Amount must be positive')
+      .optional(),
+    currency: z
+      .string()
+      .length(3, 'Currency must be a 3-letter code')
+      .optional(),
+    type: z.enum(['INCOME', 'EXPENSE']).optional(),
+    note: z.string().min(1, 'Note is required').max(500).optional(),
+    date: z.string().datetime('Invalid date format').optional(),
+  })
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: 'At least one field must be provided',
+  });
+
 // All filters optional: no accountId means "across all my accounts".
 export const getTransactionsSchema = z
   .object({

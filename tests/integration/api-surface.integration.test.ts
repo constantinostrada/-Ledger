@@ -15,6 +15,10 @@ import {
   POST as createTransaction,
 } from '@/app/api/transactions/route';
 import {
+  DELETE as deleteTransaction,
+  PATCH as updateTransaction,
+} from '@/app/api/transactions/[id]/route';
+import {
   GET as listCategories,
   POST as createCategory,
 } from '@/app/api/categories/route';
@@ -106,6 +110,16 @@ describe('API surface (integration)', () => {
       ],
       [listTransactions, '/api/transactions'],
       [createTransaction, '/api/transactions', { method: 'POST', body: {} }],
+      [
+        updateTransaction,
+        '/api/transactions/x',
+        { method: 'PATCH', body: {}, params: { id: 'x' } },
+      ],
+      [
+        deleteTransaction,
+        '/api/transactions/x',
+        { method: 'DELETE', params: { id: 'x' } },
+      ],
       [listCategories, '/api/categories'],
       [createCategory, '/api/categories', { method: 'POST', body: {} }],
       [
@@ -319,6 +333,105 @@ describe('API surface (integration)', () => {
       { token }
     );
     expect(inverted.status).toBe(400);
+  });
+
+  it('transactions: update, delete, and cross-user isolation', async () => {
+    const { token } = await registerUser();
+    const account = await createAccount(token, { initialBalanceCents: 50000 });
+    const category = await call(createCategory, '/api/categories', {
+      method: 'POST',
+      token,
+      body: { name: 'Editable Cat', kind: 'EXPENSE', color: '#336699' },
+    });
+
+    const created = await call(createTransaction, '/api/transactions', {
+      method: 'POST',
+      token,
+      body: {
+        accountId: account.id,
+        categoryId: category.body.id,
+        amountCents: 1500,
+        currency: 'USD',
+        type: 'EXPENSE',
+        note: 'Before edit',
+        date: new Date().toISOString(),
+      },
+    });
+    expect(created.status).toBe(201);
+
+    const updated = await call(
+      updateTransaction,
+      `/api/transactions/${created.body.id}`,
+      {
+        method: 'PATCH',
+        token,
+        body: { amountCents: 2500, note: 'After edit', categoryId: null },
+        params: { id: created.body.id },
+      }
+    );
+    expect(updated.status).toBe(200);
+    expect(updated.body).toMatchObject({
+      id: created.body.id,
+      amountCents: 2500,
+      note: 'After edit',
+      categoryId: null,
+    });
+
+    const emptyPatch = await call(
+      updateTransaction,
+      `/api/transactions/${created.body.id}`,
+      {
+        method: 'PATCH',
+        token,
+        body: {},
+        params: { id: created.body.id },
+      }
+    );
+    expect(emptyPatch.status).toBe(400);
+
+    // Another user's token cannot see, edit, or delete the transaction.
+    const stranger = await registerUser();
+    const foreignPatch = await call(
+      updateTransaction,
+      `/api/transactions/${created.body.id}`,
+      {
+        method: 'PATCH',
+        token: stranger.token,
+        body: { note: 'Hijacked' },
+        params: { id: created.body.id },
+      }
+    );
+    expect(foreignPatch.status).toBe(404);
+    const foreignDelete = await call(
+      deleteTransaction,
+      `/api/transactions/${created.body.id}`,
+      {
+        method: 'DELETE',
+        token: stranger.token,
+        params: { id: created.body.id },
+      }
+    );
+    expect(foreignDelete.status).toBe(404);
+
+    const deleted = await call(
+      deleteTransaction,
+      `/api/transactions/${created.body.id}`,
+      { method: 'DELETE', token, params: { id: created.body.id } }
+    );
+    expect(deleted.status).toBe(204);
+    expect(deleted.body).toBeNull();
+
+    // Balances are derived from the ledger, so only the opening balance
+    // remains after the delete.
+    const worth = await call(netWorth, '/api/reports/net-worth', { token });
+    expect(worth.body.netWorthCents).toBe(50000);
+
+    const missingDelete = await call(
+      deleteTransaction,
+      `/api/transactions/${created.body.id}`,
+      { method: 'DELETE', token, params: { id: created.body.id } }
+    );
+    expect(missingDelete.status).toBe(404);
   });
 
   it('budgets: PUT is an idempotent upsert and GET derives spend', async () => {

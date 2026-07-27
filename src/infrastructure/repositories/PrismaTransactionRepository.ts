@@ -62,6 +62,11 @@ export class PrismaTransactionRepository implements ITransactionRepository {
     await this.prisma.transaction.create({ data: this.toRow(transaction) });
   }
 
+  async update(transaction: Transaction): Promise<void> {
+    const { id, ...data } = this.toRow(transaction);
+    await this.prisma.transaction.update({ where: { id }, data });
+  }
+
   async saveAllIgnoringDuplicates(
     transactions: Transaction[]
   ): Promise<number> {

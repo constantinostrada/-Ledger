@@ -40,6 +40,23 @@ a {
   font-weight: 700;
 }
 
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.app-nav {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.app-nav a:hover {
+  color: #0967d2;
+}
+
 .app-header-user {
   display: flex;
   align-items: center;
@@ -273,4 +290,101 @@ a {
 .form-field select:focus {
   outline: 2px solid #0967d2;
   outline-offset: 1px;
+}
+
+/* --- Transactions --- */
+.transaction-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.transaction-form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+.transaction-form-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.filter-bar .form-field {
+  min-width: 10rem;
+}
+
+.filter-clear {
+  margin-bottom: 0.25rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.transaction-table th,
+.transaction-table td {
+  padding: 0.6rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.transaction-table thead th {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.transaction-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cell-amount {
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.amount-expense {
+  color: #b71c1c;
+}
+
+.amount-income {
+  color: #1b5e20;
+}
+
+.cell-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }

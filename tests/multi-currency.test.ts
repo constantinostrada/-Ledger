@@ -104,6 +104,8 @@ class FakeTransactionRepository implements ITransactionRepository {
     this.stored.push(transaction);
   }
 
+  async update(): Promise<void> {}
+
   async saveAllIgnoringDuplicates(
     transactions: Transaction[]
   ): Promise<number> {
@@ -170,9 +172,9 @@ describe('Money.convertTo', () => {
     expect(usd.getCurrency()).toBe('USD');
 
     // 1234 * 1.08 = 1332.72 → rounds to 1333, never a fractional cent.
-    expect(Money.fromCents(1_234, 'EUR').convertTo('USD', 1.08).getCents()).toBe(
-      1_333
-    );
+    expect(
+      Money.fromCents(1_234, 'EUR').convertTo('USD', 1.08).getCents()
+    ).toBe(1_333);
   });
 
   it('is the identity for the same currency', () => {

@@ -19,6 +19,8 @@ import { UpdateAccountUseCase } from '@application/use-cases/UpdateAccountUseCas
 import { ArchiveAccountUseCase } from '@application/use-cases/ArchiveAccountUseCase';
 import { CreateTransactionUseCase } from '@application/use-cases/CreateTransactionUseCase';
 import { GetTransactionsUseCase } from '@application/use-cases/GetTransactionsUseCase';
+import { UpdateTransactionUseCase } from '@application/use-cases/UpdateTransactionUseCase';
+import { DeleteTransactionUseCase } from '@application/use-cases/DeleteTransactionUseCase';
 import { SetBudgetUseCase } from '@application/use-cases/SetBudgetUseCase';
 import { GetBudgetsUseCase } from '@application/use-cases/GetBudgetsUseCase';
 import { GetSpendByCategoryReportUseCase } from '@application/use-cases/GetSpendByCategoryReportUseCase';
@@ -102,6 +104,20 @@ export class Container {
   );
 
   private getTransactionsUseCase = new GetTransactionsUseCase(
+    this.transactionRepository,
+    this.accountRepository
+  );
+
+  private updateTransactionUseCase = new UpdateTransactionUseCase(
+    this.transactionRepository,
+    this.accountRepository,
+    this.categoryRepository,
+    this.userRepository,
+    this.transactionService,
+    this.baseCurrencyConverter
+  );
+
+  private deleteTransactionUseCase = new DeleteTransactionUseCase(
     this.transactionRepository,
     this.accountRepository
   );
@@ -216,6 +232,14 @@ export class Container {
 
   getGetTransactionsUseCase(): GetTransactionsUseCase {
     return this.getTransactionsUseCase;
+  }
+
+  getUpdateTransactionUseCase(): UpdateTransactionUseCase {
+    return this.updateTransactionUseCase;
+  }
+
+  getDeleteTransactionUseCase(): DeleteTransactionUseCase {
+    return this.deleteTransactionUseCase;
   }
 
   getSetBudgetUseCase(): SetBudgetUseCase {

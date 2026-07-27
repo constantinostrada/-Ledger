@@ -26,6 +26,8 @@ export interface ITransactionRepository {
     offset: number
   ): Promise<Transaction[]>;
   save(transaction: Transaction): Promise<void>;
+  /** Persists changes to an already-saved transaction. */
+  update(transaction: Transaction): Promise<void>;
   /**
    * Inserts many transactions, silently skipping any that collide with an
    * already-persisted one on (recurringRuleId, date). Returns how many rows
